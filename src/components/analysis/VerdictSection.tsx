@@ -29,6 +29,11 @@ export function VerdictSection({ analysis }: VerdictSectionProps) {
     }
   };
 
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: "smooth" });
+  };
+
   return (
     <section id="sec-verdict" className="pt-4 pb-12 border-b border-[var(--color-border-subtle)] space-y-10 md:space-y-14 font-sans">
       {/* Chapter Tag + Status */}
@@ -83,14 +88,29 @@ export function VerdictSection({ analysis }: VerdictSectionProps) {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl text-xs font-sans">
+          <button type="button" onClick={() => scrollTo("sec-requirements")} className="text-left border-l border-[var(--color-accent)] pl-3 py-1 hover:bg-[var(--color-surface-muted)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-muted)]">
+            <span className="block text-[10px] font-mono tracking-wider text-[var(--color-text-muted)]">ELIGIBILITY</span>
+            <span className="font-semibold text-black">{stats.mandatoryMatched} mandatory requirements satisfied</span>
+          </button>
+          <button type="button" onClick={() => scrollTo("sec-gaps")} className="text-left border-l border-[var(--color-border-strong)] pl-3 py-1 hover:bg-[var(--color-surface-muted)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-muted)]">
+            <span className="block text-[10px] font-mono tracking-wider text-[var(--color-text-muted)]">COMPETITIVENESS</span>
+            <span className="font-semibold text-black">{stats.failed + stats.partial + stats.unknown} items need attention</span>
+          </button>
+        </div>
+
         {/* Scroll CTA Link */}
-        <div className="pt-4">
+        <div className="pt-4 flex flex-wrap gap-x-5 gap-y-2">
           <button
             onClick={scrollToNext}
             className="inline-flex items-center gap-2 text-sm font-sans font-semibold text-black hover:underline group cursor-pointer"
           >
             <span>See requirement evaluation ledger</span>
             <ArrowDown className="w-4 h-4 transition-transform group-hover:translate-y-1" />
+          </button>
+          <button onClick={() => scrollTo("sec-why")} className="inline-flex items-center gap-2 text-sm font-sans font-semibold text-black hover:underline cursor-pointer">
+            <span>Inspect WHY traces</span>
+            <ArrowDown className="w-4 h-4" />
           </button>
         </div>
       </div>

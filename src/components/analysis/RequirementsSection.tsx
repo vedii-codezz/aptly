@@ -5,13 +5,14 @@ import { OpportunityRequirement } from "@/types/opportunity";
 import { StatusBadge } from "../shared/StatusBadge";
 import { ImportanceBadge } from "../shared/ImportanceBadge";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
 
 interface RequirementsSectionProps {
   requirements: OpportunityRequirement[];
+  onTraceWhy: (requirementId: string) => void;
 }
 
-export function RequirementsSection({ requirements }: RequirementsSectionProps) {
+export function RequirementsSection({ requirements, onTraceWhy }: RequirementsSectionProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -103,6 +104,14 @@ export function RequirementsSection({ requirements }: RequirementsSectionProps) 
                       {/* Right: Status Badge + Toggle */}
                       <div className="md:col-span-2 flex items-center justify-end gap-2 shrink-0 pl-9 md:pl-0">
                         <StatusBadge status={req.status} size="sm" />
+                        <button
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); onTraceWhy(req.id); }}
+                          className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono text-[var(--color-text-muted)] hover:text-[var(--color-accent)] focus-visible:text-[var(--color-accent)] focus-visible:outline-none"
+                          aria-label={`Trace why ${req.title} was evaluated this way`}
+                        >
+                          TRACE WHY <ArrowRight className="w-3 h-3" />
+                        </button>
                         <button
                           type="button"
                           className="text-[10px] font-mono text-[var(--color-text-muted)] group-hover:text-black flex items-center gap-0.5"

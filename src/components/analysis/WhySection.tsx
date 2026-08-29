@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { RequirementTrace } from "@/types/trace";
 import { EvidenceStrength } from "@/types/evidence";
 import { StatusBadge } from "../shared/StatusBadge";
@@ -11,10 +11,22 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 
 interface WhySectionProps {
   traces: RequirementTrace[];
+  activeRequirementId: string | null;
+  onActiveRequirementChange: (requirementId: string | null) => void;
 }
 
-export function WhySection({ traces }: WhySectionProps) {
+export function WhySection({ traces, activeRequirementId, onActiveRequirementChange }: WhySectionProps) {
   const [selectedTraceId, setSelectedTraceId] = useState<string>(traces[0]?.requirementId || "");
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (activeRequirementId && traces.some((trace) => trace.requirementId === activeRequirementId)) {
+      setSelectedTraceId(activeRequirementId);
+      setIsFocused(true);
+      const timer = window.setTimeout(() => setIsFocused(false), 1400);
+      return () => window.clearTimeout(timer);
+    }
+  }, [activeRequirementId, traces]);
 
   const currentTrace = traces.find((t) => t.requirementId === selectedTraceId) || traces[0];
 
@@ -51,13 +63,14 @@ export function WhySection({ traces }: WhySectionProps) {
       </div>
 
       {/* Requirement Selector Strip */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-[var(--color-border-subtle)]">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-[var(--color-border-subtle)]" aria-label="Requirement reasoning chains">
         {traces.map((trace) => {
           const isSelected = trace.requirementId === currentTrace.requirementId;
           return (
             <button
               key={trace.requirementId}
-              onClick={() => setSelectedTraceId(trace.requirementId)}
+              onClick={() => { setSelectedTraceId(trace.requirementId); onActiveRequirementChange(trace.requirementId); }}
+              onFocus={() => onActiveRequirementChange(trace.requirementId)}
               className={cn(
                 "px-3 py-2 rounded-control text-xs font-mono border transition-all duration-micro whitespace-nowrap flex items-center gap-2",
                 isSelected
@@ -73,7 +86,7 @@ export function WhySection({ traces }: WhySectionProps) {
       </div>
 
       {/* Spatial 4-Stage Evidence Pipeline (Desktop: 4 Columns, Mobile: Stacked) */}
-      <div className="space-y-6">
+      <div className={cn("space-y-6 transition-opacity duration-ui", isFocused && "ring-1 ring-[var(--color-accent)] ring-offset-4 ring-offset-[var(--color-bg)]")}>
         {/* Active Trace Header */}
         <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-[var(--color-border-subtle)]">
           <div className="flex items-center gap-3">
@@ -88,9 +101,12 @@ export function WhySection({ traces }: WhySectionProps) {
         </div>
 
         {/* 4 Connected Stages Across Desktop Width */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 relative" onMouseEnter={() => onActiveRequirementChange(currentTrace.requirementId)} onFocus={() => onActiveRequirementChange(currentTrace.requirementId)}>
+          <div aria-hidden="true" className="hidden lg:block absolute top-1/2 left-[11%] right-[11%] h-px bg-[var(--color-border)] -z-0">
+            <div className="h-full origin-left bg-[var(--color-accent)] scale-x-100 motion-reduce:transform-none transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)]" />
+          </div>
           {/* STAGE 1: SOURCE REQUIREMENT */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
+          <div className="relative z-10 p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] focus-within:border-[var(--color-accent)] transition-colors">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
                 <span className="text-[var(--color-accent)] font-bold">01 / SOURCE SPECIFICATION</span>
@@ -110,9 +126,10 @@ export function WhySection({ traces }: WhySectionProps) {
               </div>
             )}
           </div>
+          <div aria-hidden="true" className="lg:hidden flex justify-center text-[var(--color-accent)]"><ArrowDown className="w-4 h-4" /></div>
 
           {/* STAGE 2: NORMALIZED INTERPRETATION */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
+          <div className="relative z-10 p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
                 <span className="text-[var(--color-accent)] font-bold">02 / NORMALIZED RULE</span>
@@ -130,9 +147,10 @@ export function WhySection({ traces }: WhySectionProps) {
               Category: <strong className="text-black">{currentTrace.interpretation.categoryLabel}</strong>
             </div>
           </div>
+          <div aria-hidden="true" className="lg:hidden flex justify-center text-[var(--color-accent)]"><ArrowDown className="w-4 h-4" /></div>
 
           {/* STAGE 3: CANDIDATE PROFILE EVIDENCE */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
+          <div className="relative z-10 p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
                 <span className="text-[var(--color-accent)] font-bold">03 / CANDIDATE EVIDENCE</span>
@@ -171,7 +189,7 @@ export function WhySection({ traces }: WhySectionProps) {
           </div>
 
           {/* STAGE 4: DETERMINISTIC DECISION (Arrival State) */}
-          <div className="p-5 bg-black text-white rounded-control space-y-3 flex flex-col justify-between shadow-command transition-transform duration-ui hover:scale-[1.01]">
+          <div className="relative z-10 p-5 bg-black text-white rounded-control space-y-3 flex flex-col justify-between shadow-command transition-transform duration-ui hover:scale-[1.01]">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-stone-400 uppercase">
                 <span>04 / DETERMINISTIC DECISION</span>

@@ -3,15 +3,16 @@
 import React from "react";
 import { GapCategorization } from "@/types/analysis";
 import { DetailedGapItem } from "@/types/trace";
-import { AlertOctagon, TrendingUp, HelpCircle, CheckCircle2 } from "lucide-react";
+import { AlertOctagon, TrendingUp, HelpCircle, CheckCircle2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface GapsSectionProps {
   gaps: GapCategorization;
   onNavigateToProfile?: (field: string) => void;
+  onBuildPlan?: (gapId: string) => void;
 }
 
-export function GapsSection({ gaps, onNavigateToProfile }: GapsSectionProps) {
+export function GapsSection({ gaps, onNavigateToProfile, onBuildPlan }: GapsSectionProps) {
   const priorityBadgeStyles = {
     CRITICAL: "bg-aptly-fail-bg text-aptly-fail border-aptly-fail-border",
     HIGH: "bg-aptly-partial-bg text-aptly-partial border-aptly-partial-border",
@@ -76,6 +77,7 @@ export function GapsSection({ gaps, onNavigateToProfile }: GapsSectionProps) {
                   <div className="text-xs font-mono text-aptly-fail pl-7 font-semibold">
                     Action: {gap.nextAction}
                   </div>
+                  {onBuildPlan && <button type="button" onClick={() => onBuildPlan(gap.id)} className="ml-7 inline-flex items-center gap-1 text-[10px] font-mono text-[var(--color-accent)] hover:underline focus-visible:outline-none">BUILD A PLAN <ArrowRight className="w-3 h-3" /></button>}
                 </div>
               ))}
             </div>
@@ -125,6 +127,7 @@ export function GapsSection({ gaps, onNavigateToProfile }: GapsSectionProps) {
                     <strong className="text-black">{gap.nextAction}</strong>
                   </div>
                 </div>
+                {onBuildPlan && <button type="button" onClick={() => onBuildPlan(gap.id)} className="ml-7 inline-flex items-center gap-1 text-[10px] font-mono text-[var(--color-accent)] hover:underline focus-visible:outline-none">BUILD A PLAN <ArrowRight className="w-3 h-3" /></button>}
               </div>
             ))}
           </div>

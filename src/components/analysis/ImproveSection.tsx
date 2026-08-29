@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ImprovementPlan } from "@/types/improvement";
 import { ImportanceBadge } from "../shared/ImportanceBadge";
 import { cn } from "@/lib/utils";
@@ -15,10 +15,26 @@ import {
 interface ImproveSectionProps {
   plans: ImprovementPlan[];
   onSimulateEvidence: (skillName: string) => void;
+  activePlanId: string | null;
+  onActivePlanChange: (planId: string | null) => void;
 }
 
-export function ImproveSection({ plans, onSimulateEvidence }: ImproveSectionProps) {
+export function ImproveSection({ plans, onSimulateEvidence, activePlanId, onActivePlanChange }: ImproveSectionProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string>(plans[0]?.id || "");
+  const [hasEntered, setHasEntered] = useState(false);
+  const progressionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activePlanId && plans.some((plan) => plan.id === activePlanId)) setSelectedPlanId(activePlanId);
+  }, [activePlanId, plans]);
+
+  useEffect(() => {
+    const element = progressionRef.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setHasEntered(true); observer.disconnect(); } }, { threshold: 0.2 });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [selectedPlanId]);
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId) || plans[0];
 
@@ -57,7 +73,7 @@ export function ImproveSection({ plans, onSimulateEvidence }: ImproveSectionProp
           return (
             <button
               key={plan.id}
-              onClick={() => setSelectedPlanId(plan.id)}
+              onClick={() => { setSelectedPlanId(plan.id); onActivePlanChange(plan.id); }}
               className={cn(
                 "px-3.5 py-2 rounded-control text-xs font-sans border transition-all duration-micro whitespace-nowrap flex items-center gap-2",
                 isSelected
@@ -152,11 +168,14 @@ export function ImproveSection({ plans, onSimulateEvidence }: ImproveSectionProp
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div ref={progressionRef} className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div aria-hidden="true" className="hidden lg:block absolute top-8 left-[8%] right-[8%] h-px bg-[var(--color-border)]">
+                <div className={cn("h-full bg-[var(--color-accent)] origin-left transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transform-none", hasEntered ? "scale-x-100" : "scale-x-0")} />
+              </div>
               {selectedPlan.steps.map((step) => (
                 <div
                   key={step.stepNumber}
-                  className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between"
+                  className="relative z-10 p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">

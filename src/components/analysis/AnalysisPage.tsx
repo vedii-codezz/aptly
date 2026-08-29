@@ -31,6 +31,26 @@ export function AnalysisPage({ onNewAnalysis }: AnalysisPageProps) {
   } = useWorkspaceStore();
 
   const [isAskAptlyOpen, setIsAskAptlyOpen] = useState(false);
+  const [activeRequirementId, setActiveRequirementId] = useState<string | null>(null);
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
+
+  const scrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - 76, behavior: "smooth" });
+  };
+
+  const traceRequirement = (requirementId: string) => {
+    setActiveRequirementId(requirementId);
+    scrollTo("sec-why");
+  };
+
+  const openImprovementForGap = (gapId: string) => {
+    const plan = activeImprovementPlans.find((item) => item.gapId === gapId);
+    if (!plan) return;
+    setActivePlanId(plan.id);
+    scrollTo("sec-improve");
+  };
 
   if (!currentAnalysis) return null;
 
@@ -52,12 +72,16 @@ export function AnalysisPage({ onNewAnalysis }: AnalysisPageProps) {
 
         {/* 02 / REQUIREMENTS */}
         <ChapterReveal>
-          <RequirementsSection requirements={currentAnalysis.evaluatedRequirements} />
+          <RequirementsSection requirements={currentAnalysis.evaluatedRequirements} onTraceWhy={traceRequirement} />
         </ChapterReveal>
 
         {/* 03 / WHY */}
         <ChapterReveal>
-          <WhySection traces={currentAnalysis.requirementTraces} />
+          <WhySection
+            traces={currentAnalysis.requirementTraces}
+            activeRequirementId={activeRequirementId}
+            onActiveRequirementChange={setActiveRequirementId}
+          />
         </ChapterReveal>
 
         {/* 04 / FIT */}
@@ -71,7 +95,7 @@ export function AnalysisPage({ onNewAnalysis }: AnalysisPageProps) {
 
         {/* 05 / GAPS */}
         <ChapterReveal>
-          <GapsSection gaps={currentAnalysis.gaps} />
+          <GapsSection gaps={currentAnalysis.gaps} onBuildPlan={openImprovementForGap} />
         </ChapterReveal>
 
         {/* 06 / IMPROVE */}
@@ -80,6 +104,8 @@ export function AnalysisPage({ onNewAnalysis }: AnalysisPageProps) {
             <ImproveSection
               plans={activeImprovementPlans}
               onSimulateEvidence={simulateAddSkillEvidence}
+              activePlanId={activePlanId}
+              onActivePlanChange={setActivePlanId}
             />
           </ChapterReveal>
         )}

@@ -17,7 +17,7 @@ interface ResumeFitSectionProps {
 }
 
 export function ResumeFitSection({ resumeFit }: ResumeFitSectionProps) {
-  const { stats, disconnects, claimedEvidence, inspectedBullets } = resumeFit;
+  const { stats, disconnects, claimedEvidence, inspectedBullets, traces } = resumeFit;
   const [expandedBulletId, setExpandedBulletId] = useState<string | null>(null);
 
   const qualityStyles: Record<BulletQuality, string> = {
@@ -35,6 +35,22 @@ export function ResumeFitSection({ resumeFit }: ResumeFitSectionProps) {
         className="absolute right-0 top-0 text-[10rem] md:text-[14rem] font-serif font-black text-black/[0.02] select-none pointer-events-none -z-10 leading-none -translate-y-10"
       >
         APTLY/08
+      </div>
+
+      <div className="space-y-4">
+        <div className="border-b border-black pb-2 flex items-center justify-between">
+          <span className="text-xs font-mono font-bold text-black uppercase tracking-wider">PROFILE → DOCUMENT EVIDENCE</span>
+          <span className="text-[10px] font-mono text-[var(--color-text-muted)]">VERIFIED COMPARISONS</span>
+        </div>
+        <div className="divide-y divide-[var(--color-border-subtle)]">
+          {traces.slice(0, 6).map((trace) => (
+            <div key={trace.requirementId} tabIndex={0} className="group grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-center py-4 focus-visible:outline-none focus-visible:bg-[var(--color-surface-muted)]">
+              <div><span className="block text-[10px] font-mono tracking-wider text-[var(--color-text-muted)]">PROFILE</span><span className="text-sm font-semibold text-black">{trace.profileSummary}</span></div>
+              <div aria-hidden="true" className={cn("hidden md:block w-20 border-t transition-colors", trace.resumeEvidenceLocations.length ? "border-[var(--color-accent)]" : "border-dashed border-[var(--color-border-strong)]")} />
+              <div><span className="block text-[10px] font-mono tracking-wider text-[var(--color-text-muted)]">DOCUMENT</span><span className={cn("text-sm", trace.resumeEvidenceLocations.length ? "text-black" : "text-[var(--color-text-muted)]")}>{trace.resumeEvidenceLocations[0]?.snippet || "NOT FOUND IN DOCUMENT"}</span></div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Chapter Header */}
