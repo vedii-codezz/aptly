@@ -90,10 +90,10 @@ export function WhySection({ traces }: WhySectionProps) {
         {/* 4 Connected Stages Across Desktop Width */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 relative">
           {/* STAGE 1: SOURCE REQUIREMENT */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle">
+          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
-                <span>01 / SOURCE SPECIFICATION</span>
+                <span className="text-[var(--color-accent)] font-bold">01 / SOURCE SPECIFICATION</span>
                 <TrustTag trust="FACT" />
               </div>
               <p className="text-xs text-black font-mono leading-relaxed">
@@ -104,7 +104,7 @@ export function WhySection({ traces }: WhySectionProps) {
             {currentTrace.highlightedPhrase && (
               <div className="text-[10px] font-mono text-[var(--color-text-muted)] pt-2 border-t border-[var(--color-border-subtle)]">
                 Parameter:{" "}
-                <span className="font-bold text-black bg-stone-100 px-1 py-0.5 rounded">
+                <span className="font-bold text-black bg-[var(--color-surface-muted)] px-1 py-0.5 rounded">
                   {currentTrace.highlightedPhrase}
                 </span>
               </div>
@@ -112,10 +112,10 @@ export function WhySection({ traces }: WhySectionProps) {
           </div>
 
           {/* STAGE 2: NORMALIZED INTERPRETATION */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle">
+          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
-                <span>02 / NORMALIZED RULE</span>
+                <span className="text-[var(--color-accent)] font-bold">02 / NORMALIZED RULE</span>
                 <TrustTag trust={currentTrace.interpretation.trustClassification} />
               </div>
               <div className="text-xs font-mono font-bold text-black">
@@ -132,10 +132,10 @@ export function WhySection({ traces }: WhySectionProps) {
           </div>
 
           {/* STAGE 3: CANDIDATE PROFILE EVIDENCE */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle">
+          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle hover:border-[var(--color-accent)] transition-colors">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
-                <span>03 / CANDIDATE EVIDENCE</span>
+                <span className="text-[var(--color-accent)] font-bold">03 / CANDIDATE EVIDENCE</span>
                 <span
                   className={cn(
                     "text-[9px] font-mono px-1 py-0.2 rounded-control border uppercase font-bold",

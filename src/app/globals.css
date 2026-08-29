@@ -4,21 +4,29 @@
 
 @layer base {
   :root {
-    /* ─── Color Tokens ─── */
-    --color-bg: #FBFBF9;
+    /* ─── Editorial + Technical Color Tokens ─── */
+    --color-bg: #F3F5F7;
     --color-surface: #FFFFFF;
     --color-surface-elevated: #FFFFFF;
-    --color-surface-muted: #F5F5F0;
-    --color-surface-active: #EFEFEA;
+    --color-surface-muted: #F8FAFC;
+    --color-surface-active: #EEF2F6;
 
-    --color-text-primary: #111111;
-    --color-text-secondary: #4A4A45;
-    --color-text-muted: #8E8E86;
-    --color-text-ghost: #B5B5AB;
+    --color-text-primary: #111318;
+    --color-text-secondary: #626874;
+    --color-text-muted: #9298A3;
+    --color-text-ghost: #B4B9C4;
 
-    --color-border: #E2E2D8;
-    --color-border-strong: #BCBCB0;
-    --color-border-subtle: #EAEAE2;
+    --color-border: #D8DCE3;
+    --color-border-strong: #BDC3CF;
+    --color-border-subtle: #E8ECF2;
+
+    /* ─── Signal & Semantic Colors ─── */
+    --color-accent: #2457FF;
+    --color-accent-soft: #E8EDFF;
+    --color-success: #16835D;
+    --color-warning: #B76A00;
+    --color-failure: #C63C45;
+    --color-unknown: #747B88;
 
     /* ─── Spacing & Layout ─── */
     --window-radius: 6px;
@@ -49,7 +57,7 @@
 
   /* Consistent selection */
   ::selection {
-    background-color: #111111;
+    background-color: #111318;
     color: #FFFFFF;
   }
 }

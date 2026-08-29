@@ -18,6 +18,15 @@ import {
   Edit3,
 } from "lucide-react";
 
+export type ParseStage =
+  | "idle"
+  | "reading"
+  | "extracting"
+  | "structuring"
+  | "mapping"
+  | "ready"
+  | "error";
+
 export function ResumeUpload() {
   const {
     activeResume,
@@ -31,7 +40,7 @@ export function ResumeUpload() {
   const [inputMode, setInputMode] = useState<"upload" | "paste">("upload");
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStage, setProcessingStage] = useState("");
+  const [parseStage, setParseStage] = useState<ParseStage>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(
     activeResume.isDemo ? "Aarav_Sharma_Resume.pdf" : null
@@ -41,37 +50,51 @@ export function ResumeUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleProcessText = (rawText: string, fileName?: string) => {
+    setParseStage("structuring");
     setResumeText(rawText);
     const parsedDoc = parseResumeText(rawText, false);
+
+    setParseStage("mapping");
     const adaptedProfile = createProfileFromResume(parsedDoc, activeProfile);
     updateProfile(() => adaptedProfile);
+
     if (fileName) setUploadedFileName(fileName);
     setUploadError(null);
+    setParseStage("ready");
   };
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
     setUploadError(null);
-    setProcessingStage("Reading document...");
+    setParseStage("reading");
 
     try {
-      setTimeout(() => setProcessingStage("Extracting text and structure..."), 300);
+      // Small tick for UI feedback
+      await new Promise((r) => setTimeout(r, 100));
+      setParseStage("extracting");
+
       const result = await parseDocumentFile(file);
 
       if (!result.success || !result.text) {
+        setParseStage("error");
         setUploadError(
           result.error ||
-            "Unable to parse this document. Please ensure it is a valid PDF, Word (.docx), or plain text file, or paste your resume text directly."
+            "Unable to parse this document. Please ensure it is a valid text-based PDF, Word (.docx), or plain text (.txt) file, or paste your resume text directly."
         );
       } else {
-        setProcessingStage("Parsing candidate evidence...");
         handleProcessText(result.text, file.name);
       }
     } catch (e: any) {
-      setUploadError("Error reading file. Please paste your resume text instead.");
+      setParseStage("error");
+      setUploadError(
+        e.message || "Error reading file. Please paste your resume text instead."
+      );
     } finally {
       setIsProcessing(false);
-      setProcessingStage("");
+      // Reset input value so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -84,6 +107,16 @@ export function ResumeUpload() {
   };
 
   const isLoaded = activeResume.sections.length > 0 && pastedResumeText.trim().length > 0;
+
+  const stageLabels: Record<ParseStage, string> = {
+    idle: "READY",
+    reading: "READING DOCUMENT...",
+    extracting: "EXTRACTING TEXT & STRUCTURE...",
+    structuring: "IDENTIFYING SECTIONS & SKILLS...",
+    mapping: "MAPPING CANDIDATE EVIDENCE...",
+    ready: "READY ✓",
+    error: "PARSE NOTICE",
+  };
 
   return (
     <div className="border border-[var(--color-border)] rounded-control p-5 bg-[var(--color-surface)] space-y-4 font-sans text-xs">
@@ -137,7 +170,12 @@ export function ResumeUpload() {
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            if (!isProcessing) {
+              if (fileInputRef.current) fileInputRef.current.value = "";
+              fileInputRef.current?.click();
+            }
+          }}
           className={cn(
             "border-2 border-dashed rounded-control p-6 text-center cursor-pointer transition-all duration-micro space-y-2 select-none",
             isDragging
@@ -161,26 +199,35 @@ export function ResumeUpload() {
 
           {isProcessing ? (
             <div className="py-6 space-y-3 relative overflow-hidden">
-              {/* Document Scan Line */}
-              <div className="absolute left-0 right-0 h-[2px] bg-black shadow-[0_0_8px_rgba(0,0,0,0.25)] animate-doc-scan pointer-events-none" />
+              {/* Document Scan Line - Active Cobalt Signal */}
+              <div className="absolute left-0 right-0 h-[2px] bg-[var(--color-accent)] shadow-[0_0_8px_rgba(36,87,255,0.4)] animate-doc-scan pointer-events-none" />
 
               <div className="space-y-1.5">
-                <div className="text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                <div className="text-[10px] font-mono font-bold text-[var(--color-accent)] uppercase tracking-wider">
                   PARSING DOCUMENT
                 </div>
                 <div className="text-xs font-mono text-black font-bold tracking-wide">
-                  {processingStage || "READING DOCUMENT..."}
+                  {stageLabels[parseStage]}
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-1.5 text-[9px] font-mono text-[var(--color-text-ghost)] pt-1">
-                <span>01 READ</span>
-                <span>›</span>
-                <span>02 EXTRACT</span>
-                <span>›</span>
-                <span>03 STRUCTURE</span>
-                <span>›</span>
-                <span>04 EVIDENCE</span>
+              {/* Connected Real Stage Markers */}
+              <div className="flex items-center justify-center gap-1.5 text-[9px] font-mono pt-1">
+                <span className={cn(parseStage === "reading" ? "text-[var(--color-accent)] font-bold" : parseStage !== "idle" ? "text-black font-semibold" : "text-[var(--color-text-ghost)]")}>
+                  01 READ
+                </span>
+                <span className="text-[var(--color-text-ghost)]">›</span>
+                <span className={cn(parseStage === "extracting" ? "text-[var(--color-accent)] font-bold" : ["structuring", "mapping", "ready"].includes(parseStage) ? "text-black font-semibold" : "text-[var(--color-text-ghost)]")}>
+                  02 EXTRACT
+                </span>
+                <span className="text-[var(--color-text-ghost)]">›</span>
+                <span className={cn(parseStage === "structuring" ? "text-[var(--color-accent)] font-bold" : ["mapping", "ready"].includes(parseStage) ? "text-black font-semibold" : "text-[var(--color-text-ghost)]")}>
+                  03 STRUCTURE
+                </span>
+                <span className="text-[var(--color-text-ghost)]">›</span>
+                <span className={cn(parseStage === "mapping" ? "text-[var(--color-accent)] font-bold" : parseStage === "ready" ? "text-[var(--color-success)] font-bold" : "text-[var(--color-text-ghost)]")}>
+                  04 EVIDENCE
+                </span>
               </div>
             </div>
           ) : isLoaded ? (
@@ -214,6 +261,7 @@ export function ResumeUpload() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (fileInputRef.current) fileInputRef.current.value = "";
                     fileInputRef.current?.click();
                   }}
                   className="px-2.5 py-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control text-system-xs text-[var(--color-text-secondary)] hover:text-black transition-colors"
@@ -262,18 +310,28 @@ export function ResumeUpload() {
 
       {/* Error Banner */}
       {uploadError && (
-        <div className="p-3 bg-aptly-fail-bg border border-aptly-fail-border rounded-control space-y-1.5 text-xs text-aptly-fail font-sans">
+        <div className="p-3.5 bg-aptly-fail-bg border border-aptly-fail-border rounded-control space-y-2 text-xs text-aptly-fail font-sans">
           <div className="flex items-center gap-1.5 font-bold font-mono text-[10px]">
             <AlertTriangle className="w-3.5 h-3.5" />
             <span>DOCUMENT PARSE NOTICE</span>
           </div>
           <p className="text-[11px] leading-relaxed">{uploadError}</p>
-          <div className="pt-1">
+          <div className="pt-1 flex items-center gap-2">
             <button
               onClick={() => setInputMode("paste")}
               className="px-2.5 py-1 bg-black text-white rounded-control text-system-xs hover:bg-[#222] font-mono"
             >
               PASTE RESUME TEXT INSTEAD →
+            </button>
+            <button
+              onClick={() => {
+                setUploadError(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                fileInputRef.current?.click();
+              }}
+              className="px-2.5 py-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control text-system-xs text-black hover:bg-[var(--color-surface-muted)] font-mono"
+            >
+              TRY ANOTHER FILE
             </button>
           </div>
         </div>

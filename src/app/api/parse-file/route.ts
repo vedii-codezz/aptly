@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { success: false, error: "No file uploaded." },
+        { success: false, error: "No file uploaded. Please select a document to parse." },
         { status: 400 }
       );
     }
@@ -18,51 +18,77 @@ export async function POST(req: NextRequest) {
     const MAX_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { success: false, error: "File exceeds maximum supported size (10MB)." },
+        { success: false, error: "File size exceeds 10MB limit. Please upload a smaller file or paste text directly." },
+        { status: 400 }
+      );
+    }
+
+    if (file.size === 0) {
+      return NextResponse.json(
+        { success: false, error: "The uploaded file is empty (0 bytes). Please select a valid document." },
         { status: 400 }
       );
     }
 
     const fileName = file.name || "document";
-    const fileExt = fileName.toLowerCase().slice(fileName.lastIndexOf("."));
+    const lastDotIndex = fileName.lastIndexOf(".");
+    const fileExt = lastDotIndex !== -1 ? fileName.toLowerCase().slice(lastDotIndex) : "";
+    const mimeType = (file.type || "").toLowerCase();
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     let extractedText = "";
+    let detectedType = "TXT";
 
-    if (fileExt === ".pdf" || file.type === "application/pdf") {
+    const isPdf = fileExt === ".pdf" || mimeType.includes("pdf");
+    const isDocx =
+      fileExt === ".docx" ||
+      mimeType.includes("wordprocessingml") ||
+      mimeType.includes("officedocument") ||
+      mimeType.includes("msword");
+    const isTxt = fileExt === ".txt" || mimeType.includes("text/plain");
+
+    if (isPdf) {
+      detectedType = "PDF";
+      let parser: PDFParse | null = null;
       try {
-        const parser = new PDFParse({ data: buffer });
+        parser = new PDFParse({ data: buffer });
         const res = await parser.getText();
-        extractedText = typeof res === "string" ? res : (res as any)?.text || "";
-        await parser.destroy();
+        extractedText = typeof res === "string" ? res : res?.text || "";
       } catch (pdfErr: any) {
         return NextResponse.json(
           {
             success: false,
             isScannedOrUnreadable: true,
-            error: "Unable to read this PDF. It may be corrupted or password protected. Paste text instead.",
+            error: "Unable to parse this PDF. The document may be corrupted, encrypted, or password-protected. Please paste your text instead.",
           },
           { status: 422 }
         );
+      } finally {
+        if (parser) {
+          try {
+            await parser.destroy();
+          } catch {
+            // Ignore destruction errors
+          }
+        }
       }
 
-      // Check if extracted text is effectively empty (scanned image PDF)
-      const cleanText = extractedText.replace(/\s+/g, " ").trim();
-      if (cleanText.length < 20 || cleanText.split(" ").length < 5) {
+      // Check if extracted text is effectively empty (scanned image PDF or empty pages)
+      const cleanText = extractedText.replace(/[\r\n\t\s]+/g, " ").trim();
+      if (cleanText.length < 20 || cleanText.split(" ").filter(Boolean).length < 5) {
         return NextResponse.json(
           {
             success: false,
             isScannedOrUnreadable: true,
-            error: "We couldn't read text from this PDF. This may be a scanned image document. Please paste your resume text instead.",
+            error: "We couldn't read text from this PDF. This looks like a scanned or image-based document. Please upload a text-based PDF/DOCX/TXT or paste the resume text instead.",
           },
           { status: 422 }
         );
       }
-    } else if (
-      fileExt === ".docx" ||
-      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
+    } else if (isDocx) {
+      detectedType = "DOCX";
       try {
         const result = await mammoth.extractRawText({ buffer });
         extractedText = result.value || "";
@@ -76,18 +102,19 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const cleanText = extractedText.replace(/\s+/g, " ").trim();
+      const cleanText = extractedText.replace(/[\r\n\t\s]+/g, " ").trim();
       if (cleanText.length < 20) {
         return NextResponse.json(
           {
             success: false,
             isScannedOrUnreadable: true,
-            error: "The DOCX document appears empty. Please paste your text instead.",
+            error: "The DOCX document appears empty. Please upload a document with text or paste your resume text.",
           },
           { status: 422 }
         );
       }
-    } else if (fileExt === ".txt" || file.type === "text/plain") {
+    } else if (isTxt) {
+      detectedType = "TXT";
       extractedText = buffer.toString("utf-8");
       if (!extractedText.trim()) {
         return NextResponse.json(
@@ -102,25 +129,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: `Unsupported file type (${fileExt || file.type}). Please upload a .pdf, .docx, or .txt file, or paste text directly.`,
+          error: `Unsupported file type (${fileExt || mimeType || "unknown"}). Please upload a .pdf, .docx, or .txt file, or paste text directly.`,
         },
         { status: 400 }
       );
     }
 
+    // Clean and normalize text
+    const normalizedText = extractedText
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/\0/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
     return NextResponse.json({
       success: true,
-      text: extractedText,
+      text: normalizedText,
       fileName,
-      fileType: fileExt.replace(".", "").toUpperCase(),
-      charCount: extractedText.length,
-      wordCount: extractedText.split(/\s+/).filter(Boolean).length,
+      fileType: detectedType,
+      charCount: normalizedText.length,
+      wordCount: normalizedText.split(/\s+/).filter(Boolean).length,
     });
   } catch (err: any) {
     return NextResponse.json(
       {
         success: false,
-        error: err.message || "Failed to process file upload.",
+        error: err.message || "An unexpected error occurred while processing the document.",
       },
       { status: 500 }
     );

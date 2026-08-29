@@ -28,26 +28,29 @@ const config: Config = {
           subtle: "var(--color-border-subtle)",
         },
         aptly: {
-          accent: "#111111",
+          accent: {
+            DEFAULT: "#2457FF",
+            soft: "#E8EDFF",
+          },
           match: {
-            DEFAULT: "#15803D",
+            DEFAULT: "#16835D",
             bg: "#F0FDF4",
             border: "#BBF7D0",
           },
           partial: {
-            DEFAULT: "#B45309",
+            DEFAULT: "#B76A00",
             bg: "#FFFBEB",
             border: "#FDE68A",
           },
           fail: {
-            DEFAULT: "#B91C1C",
+            DEFAULT: "#C63C45",
             bg: "#FEF2F2",
             border: "#FECACA",
           },
           unknown: {
-            DEFAULT: "#475569",
+            DEFAULT: "#747B88",
             bg: "#F8FAFC",
-            border: "#E2E8F0",
+            border: "#D8DCE3",
           },
         },
       },

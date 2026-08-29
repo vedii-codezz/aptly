@@ -255,7 +255,10 @@ export function OpportunityInput() {
       {/* Upload Opportunity Document */}
       {inputMode === "upload" && (
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            fileInputRef.current?.click();
+          }}
           className="border-2 border-dashed border-[var(--color-border)] hover:border-black rounded-control p-6 text-center cursor-pointer transition-all duration-micro space-y-2 bg-[var(--color-surface-muted)]"
         >
           <input
@@ -283,7 +286,7 @@ export function OpportunityInput() {
       {isExtracting && (
         <div className="p-4 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-control space-y-2 relative overflow-hidden">
           {/* Document Scan Line */}
-          <div className="absolute left-0 right-0 h-[2px] bg-black shadow-[0_0_8px_rgba(0,0,0,0.25)] animate-doc-scan pointer-events-none" />
+          <div className="absolute left-0 right-0 h-[2px] bg-[var(--color-accent)] shadow-[0_0_8px_rgba(36,87,255,0.4)] animate-doc-scan pointer-events-none" />
 
           <div className="flex items-center justify-between">
             <div className="text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-wider">

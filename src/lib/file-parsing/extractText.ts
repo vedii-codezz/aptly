@@ -28,6 +28,13 @@ export async function parseDocumentFile(file: File): Promise<ParsedDocumentResul
     };
   }
 
+  if (file.size === 0) {
+    return {
+      success: false,
+      error: "The selected file is empty (0 bytes). Please upload a valid document with content.",
+    };
+  }
+
   // Fast-path client reading for .txt files
   if (fileName.endsWith(".txt") || file.type === "text/plain") {
     try {
@@ -40,7 +47,7 @@ export async function parseDocumentFile(file: File): Promise<ParsedDocumentResul
       }
       return {
         success: true,
-        text,
+        text: text.trim(),
         fileName: file.name,
         fileType: "TXT",
         charCount: text.length,
@@ -49,12 +56,15 @@ export async function parseDocumentFile(file: File): Promise<ParsedDocumentResul
     } catch (e: any) {
       return {
         success: false,
-        error: "Failed to read text file directly. Please try pasting the content.",
+        error: "Failed to read text file directly. Please try pasting the content instead.",
       };
     }
   }
 
-  // Server-side parsing for PDF and DOCX
+  // Server-side parsing for PDF and DOCX with defensive 20s timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
+
   try {
     const formData = new FormData();
     formData.append("file", file);
@@ -62,14 +72,32 @@ export async function parseDocumentFile(file: File): Promise<ParsedDocumentResul
     const res = await fetch("/api/parse-file", {
       method: "POST",
       body: formData,
+      signal: controller.signal,
     });
 
-    const json = await res.json();
+    clearTimeout(timeoutId);
+
+    const json = await res.json().catch(() => null);
+
+    if (!json) {
+      return {
+        success: false,
+        error: `Server responded with status ${res.status}. Please paste your text directly.`,
+      };
+    }
+
     return json;
   } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      return {
+        success: false,
+        error: "Document parsing took too long. Please try a smaller file or paste your resume text directly.",
+      };
+    }
     return {
       success: false,
-      error: "Network error while processing document. Please paste your text directly instead.",
+      error: "Network connection error while processing document. Please paste your text directly instead.",
     };
   }
 }

@@ -80,10 +80,10 @@ export function ReportProgressRail() {
                 className={cn(
                   "w-3 h-3 rounded-full transition-all duration-micro flex items-center justify-center",
                   isActive
-                    ? "bg-black ring-4 ring-black/10 scale-125"
+                    ? "bg-[var(--color-accent)] ring-4 ring-[var(--color-accent)]/20 scale-125 shadow-sm"
                     : isPassed
-                    ? "bg-black"
-                    : "bg-[var(--color-surface)] border border-[var(--color-border-strong)] hover:border-black"
+                    ? "bg-[var(--color-text-primary)]"
+                    : "bg-[var(--color-surface)] border border-[var(--color-border-strong)] hover:border-[var(--color-text-primary)]"
                 )}
                 aria-label={`Jump to ${ch.num} ${ch.title}`}
               >
@@ -92,8 +92,8 @@ export function ReportProgressRail() {
 
               {/* Hover Tooltip Label */}
               {isHovered && (
-                <div className="absolute left-full ml-3 px-2 py-1 bg-black text-white text-[10px] rounded-control whitespace-nowrap shadow-subtle animate-fade-in pointer-events-none z-40">
-                  <span className="text-emerald-400 font-bold">{ch.num}</span> / {ch.title}
+                <div className="absolute left-full ml-3 px-2 py-1 bg-[var(--color-text-primary)] text-white text-[10px] rounded-control whitespace-nowrap shadow-subtle animate-fade-in pointer-events-none z-40">
+                  <span className="text-[#85A6FF] font-bold">{ch.num}</span> / {ch.title}
                 </div>
               )}
             </div>
