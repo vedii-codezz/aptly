@@ -31,13 +31,7 @@ It compares a candidate’s profile and resume against structured opportunity re
 > A decision without evidence isn't intelligence.<br>
 > It's just a number.
 
-| THE USUAL WAY | APTLY/ |
-|---|---|
-| **82% MATCH** | **MATCHED — here's the evidence.** |
-| Mystery score | Inspectable reasoning |
-| Missing = failed | Missing = UNKNOWN |
-| AI decides | Rules decide |
-| “Add keywords” | Shows missing evidence |
+<p align="center"><img src="./public/readme/usual-vs-aptly.svg" alt="The usual way compared with APTLY evidence reasoning" width="100%" /></p>
 
 **One of these is considerably harder to fake.**
 
@@ -188,13 +182,7 @@ Gemini interprets messy language. The deterministic TypeScript engine decides el
 
 Language models are excellent at interpreting messy language. They are considerably less charming when asked to become an unquestionable source of truth.
 
-```text
-GEMINI: “Here's what I think this requirement means.”
-                         ↓
-                       ZOD
-                         ↓
-DETERMINISTIC ENGINE: “Cool. I'll make the actual decision.”
-```
+<p align="center"><img src="./public/readme/decision-boundary.svg" alt="Gemini interpretation and deterministic decision boundary" width="100%" /></p>
 
 <details><summary><strong>Why not just ask Gemini if I'm eligible?</strong></summary><br>
 
@@ -219,16 +207,7 @@ Requirements can be ambiguous, interpretation can vary, and mandatory rules shou
 **DOCUMENTS** — pdf-parse · Mammoth<br>
 **DEPLOYMENT** — Vercel
 
-| SYSTEM | RESULT |
-|---|---:|
-| Core | 6 / 6 |
-| Phase 4 | 7 / 7 |
-| Phase 5 | 8 / 8 |
-| Phase 6 | 10 / 10 |
-| UX | 10 / 10 |
-| **Existing baseline** | **41 / 41** |
-| **APTLY/LINK** | **38 / 38** |
-| Real PDF regression | **PASS** |
+<p align="center"><img src="./public/readme/status.svg" alt="APTLY verified system status" width="100%" /></p>
 
 ```text
 SYSTEM STATUS
