@@ -76,4 +76,5 @@ export interface Opportunity {
   requirements: OpportunityRequirement[];
   tags: string[];
   sourceUrl?: string;
+  source?: { type: "url"; originalUrl: string; resolvedUrl: string; title?: string; importedAt: string };
 }

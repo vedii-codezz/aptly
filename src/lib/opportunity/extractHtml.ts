@@ -6,13 +6,13 @@ export function extractOpportunityHtml(html: string) {
   let structured = "";
   for (const script of scripts) {
     try {
-      const values = Array.isArray(JSON.parse(script[1])) ? JSON.parse(script[1]) : [JSON.parse(script[1])];
-      const job = values.find((item: any) => item?.["@type"] === "JobPosting");
+      const parsed = JSON.parse(script[1]); const values = (Array.isArray(parsed) ? parsed : [parsed]).flatMap((item: any) => item?.["@graph"] || item);
+    const job = values.find((item: any) => item?.["@type"] === "JobPosting" || (Array.isArray(item?.["@type"]) && item["@type"].includes("JobPosting")));
       if (job) structured += [job.title, job.description, job.qualifications, job.responsibilities, job.skills, job.experienceRequirements, job.educationRequirements, job.employmentType].filter(Boolean).join("\n");
     } catch { /* fall back to readable HTML */ }
   }
   const cleaned = html.replace(/<(script|style|noscript|svg|nav|footer)[^>]*>[\s\S]*?<\/\1>/gi, " ");
   const body = decode(cleaned.match(/<(main|article)[^>]*>([\s\S]*?)<\/\1>/i)?.[2] || cleaned);
-  const text = `${structured}\n${body}`.replace(/\n{3,}/g, "\n\n").slice(0, 50000).trim();
+  const text = (structured ? structured : body).replace(/\n{3,}/g, "\n\n").slice(0, 50000).trim();
   return { title, text };
 }

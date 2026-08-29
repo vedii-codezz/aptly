@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assertSafePublicUrl } from "@/lib/opportunity/urlSafety";
-import { extractOpportunityHtml } from "@/lib/opportunity/extractHtml";
+import { importOpportunityUrl } from "@/lib/opportunity/importer";
 export const runtime = "nodejs";
-const MAX_REDIRECTS = 3;
 export async function POST(req: NextRequest) {
   try {
     const { url } = await req.json();
-    let current = await assertSafePublicUrl(url);
-    for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
-      const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 12000);
-      const response = await fetch(current, { redirect: "manual", signal: controller.signal, headers: { "User-Agent": "AptlyOpportunityImporter/1.0 (+public-listing-import)" } }); clearTimeout(timeout);
-      if ([301,302,303,307,308].includes(response.status)) { const next = response.headers.get("location"); if (!next || redirects === MAX_REDIRECTS) throw new Error("REDIRECT_LIMIT"); current = await assertSafePublicUrl(new URL(next, current).href); continue; }
-      if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "PAGE_NOT_PUBLIC" : "FETCH_FAILED");
-      if (!response.headers.get("content-type")?.includes("text/html")) throw new Error("UNSUPPORTED_CONTENT");
-      const html = (await response.text()).slice(0, 750000); const extracted = extractOpportunityHtml(html);
-      if (extracted.text.length < 200) throw new Error("NO_OPPORTUNITY_CONTENT");
-      return NextResponse.json({ success: true, data: { ...extracted, sourceUrl: url, resolvedUrl: current.href, importedAt: new Date().toISOString() } });
-    }
+    return NextResponse.json({ success: true, data: await importOpportunityUrl(url) });
   } catch (error) {
     const code = error instanceof Error ? error.message : "IMPORT_FAILED";
-    return NextResponse.json({ success: false, error: code }, { status: code === "INVALID_URL" || code === "UNSAFE_URL" ? 400 : 422 });
+    const messages: Record<string, string> = { INVALID_URL: "Enter a public HTTP or HTTPS link.", UNSAFE_URL: "This link can't be imported.", FETCH_TIMEOUT: "This page took too long to respond.", CONTENT_TOO_LARGE: "This page is too large to import safely.", UNSUPPORTED_CONTENT: "This link does not contain a public HTML listing.", PAGE_NOT_PUBLIC: "APTLY couldn't read this public page directly.", NO_OPPORTUNITY_CONTENT: "No opportunity content was found. Paste the description instead." };
+    return NextResponse.json({ success: false, code, message: messages[code] || "APTLY couldn't import this page. Paste the description instead." }, { status: code === "INVALID_URL" || code === "UNSAFE_URL" ? 400 : 422 });
   }
 }

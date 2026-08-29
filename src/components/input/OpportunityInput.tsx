@@ -46,6 +46,7 @@ export function OpportunityInput() {
   const [extractingStage, setExtractingStage] = useState("");
   const [extractionError, setExtractionError] = useState<string | null>(null);
   const [extractedResult, setExtractedResult] = useState<OpportunityExtractionOutput | null>(null);
+  const [importSource, setImportSource] = useState<Opportunity["source"]>();
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isCriteriaReviewOpen, setIsCriteriaReviewOpen] = useState(false);
 
@@ -106,11 +107,12 @@ export function OpportunityInput() {
       setExtractingStage("02 FETCH");
       const imported = await fetch("/api/opportunity/import-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: opportunityUrl }) });
       const result = await imported.json();
-      if (!result.success) throw new Error(result.error || "IMPORT_FAILED");
+      if (!result.success) throw new Error(result.message || result.code || "IMPORT_FAILED");
+      setImportSource({ type: "url", originalUrl: result.data.sourceUrl, resolvedUrl: result.data.resolvedUrl, title: result.data.title, importedAt: result.data.importedAt });
       setExtractingStage("03 EXTRACT"); setCustomText(result.data.text);
       setExtractingStage("04 STRUCTURE");
       await handleExtractWithAI(result.data.text);
-    } catch (error: any) { setExtractionError(error.message === "PAGE_NOT_PUBLIC" ? "This listing is not publicly readable. Paste the description to continue." : "APTLY couldn't import this public page. Paste the opportunity description instead."); }
+    } catch (error: any) { setExtractionError(error.message || "APTLY couldn't import this public page. Paste the opportunity description instead."); }
     finally { setIsExtracting(false); setExtractingStage(""); }
   };
 
@@ -139,11 +141,11 @@ export function OpportunityInput() {
         {/* Mode Selector */}
         <div className="inline-flex rounded-control border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-0.5">
           <button
-            onClick={() => setInputMode("link")}
+            onClick={() => { setInputMode("link"); setExtractionError(null); }} aria-pressed={inputMode === "link"}
             className={cn("px-2.5 py-1 text-system-xs rounded-control transition-colors duration-micro", inputMode === "link" ? "bg-black text-white" : "text-[var(--color-text-muted)] hover:text-black")}
           >LINK</button>
           <button
-            onClick={() => setInputMode("demo")}
+            onClick={() => { setInputMode("demo"); setExtractionError(null); }} aria-pressed={inputMode === "demo"}
             className={cn(
               "px-2.5 py-1 text-system-xs rounded-control transition-colors duration-micro",
               inputMode === "demo" ? "bg-black text-white" : "text-[var(--color-text-muted)] hover:text-black"
@@ -152,7 +154,7 @@ export function OpportunityInput() {
             DEMO
           </button>
           <button
-            onClick={() => setInputMode("paste")}
+            onClick={() => { setInputMode("paste"); setExtractionError(null); setImportSource(undefined); }} aria-pressed={inputMode === "paste"}
             className={cn(
               "px-2.5 py-1 text-system-xs rounded-control transition-colors duration-micro",
               inputMode === "paste" ? "bg-black text-white" : "text-[var(--color-text-muted)] hover:text-black"
@@ -161,7 +163,7 @@ export function OpportunityInput() {
             PASTE
           </button>
           <button
-            onClick={() => setInputMode("upload")}
+            onClick={() => { setInputMode("upload"); setExtractionError(null); }} aria-pressed={inputMode === "upload"}
             className={cn(
               "px-2.5 py-1 text-system-xs rounded-control transition-colors duration-micro",
               inputMode === "upload" ? "bg-black text-white" : "text-[var(--color-text-muted)] hover:text-black"
@@ -247,8 +249,9 @@ export function OpportunityInput() {
       {/* Paste Opportunity Text */}
       {inputMode === "link" && (
         <div className="space-y-3">
-          <label className="block text-[10px] font-mono font-bold text-[var(--color-text-muted)] tracking-wider">OPPORTUNITY URL</label>
-          <div className="flex gap-2"><input value={opportunityUrl} onChange={(e) => setOpportunityUrl(e.target.value)} placeholder="https://company.com/careers/..." type="url" className="min-w-0 flex-1 text-xs font-mono p-3 border border-[var(--color-border)] rounded-control focus:outline-none focus:border-[var(--color-accent)]" /><button onClick={handleImportUrl} disabled={!opportunityUrl.trim() || isExtracting} className="px-3.5 bg-black disabled:opacity-40 text-white rounded-control text-[10px] font-mono font-bold">IMPORT OPPORTUNITY</button></div>
+          <label htmlFor="opportunity-url" className="block text-[10px] font-mono font-bold text-[var(--color-text-muted)] tracking-wider">OPPORTUNITY URL</label>
+          <div className="flex flex-col sm:flex-row gap-2"><input id="opportunity-url" aria-invalid={Boolean(extractionError)} aria-describedby={extractionError ? "opportunity-import-error" : undefined} value={opportunityUrl} onChange={(e) => { setOpportunityUrl(e.target.value); setExtractionError(null); }} placeholder="https://company.com/careers/..." type="url" className="min-w-0 flex-1 text-xs font-mono p-3 border border-[var(--color-border)] rounded-control focus:outline-none focus:border-[var(--color-accent)]" /><button onClick={handleImportUrl} disabled={!opportunityUrl.trim() || isExtracting} className="px-3.5 bg-black disabled:opacity-40 text-white rounded-control text-[10px] font-mono font-bold">IMPORT OPPORTUNITY</button></div>
+          <button type="button" onClick={() => { setInputMode("paste"); setExtractionError(null); setImportSource(undefined); }} className="text-left text-[10px] font-mono underline text-[var(--color-text-muted)] hover:text-black">PASTE DESCRIPTION INSTEAD</button>
           <p className="text-[10px] text-[var(--color-text-muted)] font-sans">APTLY reads publicly accessible pages only. You can review extracted requirements before analysis.</p>
         </div>
       )}
@@ -313,7 +316,7 @@ export function OpportunityInput() {
 
       {/* Extraction Status */}
       {isExtracting && (
-        <div className="p-4 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-control space-y-2 relative overflow-hidden">
+        <div aria-live="polite" className="p-4 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-control space-y-2 relative overflow-hidden">
           {/* Document Scan Line */}
           <div className="absolute left-0 right-0 h-[2px] bg-[var(--color-accent)] shadow-[0_0_8px_rgba(36,87,255,0.4)] animate-doc-scan pointer-events-none" />
 
@@ -340,7 +343,7 @@ export function OpportunityInput() {
 
       {/* Extraction Error */}
       {extractionError && (
-        <div className="p-3 bg-aptly-fail-bg border border-aptly-fail-border rounded-control text-xs text-aptly-fail font-sans">
+        <div id="opportunity-import-error" role="alert" className="p-3 bg-aptly-fail-bg border border-aptly-fail-border rounded-control text-xs text-aptly-fail font-sans">
           {extractionError}
         </div>
       )}
@@ -357,6 +360,7 @@ export function OpportunityInput() {
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}
         extractedData={extractedResult}
+        source={importSource}
       />
     </div>
   );

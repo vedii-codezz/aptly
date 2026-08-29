@@ -251,6 +251,11 @@ export function CheckWindow() {
                   <span className="text-[var(--color-border)]">·</span>
                   <span className="text-black font-medium">{activeOpportunity.deadlineRelative}</span>
                 </div>
+                {activeOpportunity.source && (
+                  <a href={activeOpportunity.source.originalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex mt-1 text-[10px] font-mono text-[var(--color-text-muted)] underline hover:text-black">
+                    SOURCE / IMPORTED LINK ↗
+                  </a>
+                )}
               </div>
 
               <button

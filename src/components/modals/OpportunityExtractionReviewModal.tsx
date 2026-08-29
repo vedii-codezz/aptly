@@ -12,10 +12,12 @@ export function OpportunityExtractionReviewModal({
   isOpen,
   onClose,
   extractedData,
+  source,
 }: {
   isOpen: boolean;
   onClose: () => void;
   extractedData: OpportunityExtractionOutput | null;
+  source?: Opportunity["source"];
 }) {
   const { setActiveOpportunity, runAnalysis, openWindow } = useWorkspaceStore();
 
@@ -64,6 +66,8 @@ export function OpportunityExtractionReviewModal({
       location: extractedData.location || "Remote / Specified Location",
       stipendOrAward: extractedData.stipendOrAward || "Competitive Compensation",
       description: extractedData.description,
+      source,
+      sourceUrl: source?.originalUrl,
       isSample: false,
       tags: ["AI Extracted", extractedData.type],
       requirements: requirements.map((r) => ({
