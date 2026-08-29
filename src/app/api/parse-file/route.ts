@@ -5,13 +5,28 @@ import mammoth from "mammoth";
 // pdf-parse/pdfjs-dist require Node APIs and must never be deployed as Edge code.
 export const runtime = "nodejs";
 
-function logParseStage(stage: string, file?: File) {
-  if (process.env.NODE_ENV === "production") return;
+const isParseDebugEnabled =
+  process.env.NODE_ENV !== "production" || process.env.PARSE_FILE_DEBUG === "1";
+
+function logParseStage(stage: string, file?: File, details: Record<string, unknown> = {}) {
+  if (!isParseDebugEnabled) return;
+
   console.info("[parse-file]", {
     stage,
-    ...(file
-      ? { fileName: file.name, mimeType: file.type || "unknown", fileSize: file.size }
-      : {}),
+    nodeVersion: process.version,
+    runtime: "nodejs",
+    ...(file ? { mimeType: file.type || "unknown", fileSize: file.size } : {}),
+    ...details,
+  });
+}
+
+function logParseError(stage: string, error: unknown) {
+  const parseError = error instanceof Error ? error : new Error(String(error));
+  console.error("[parse-file]", {
+    stage,
+    name: parseError.name,
+    message: parseError.message,
+    stack: parseError.stack,
   });
 }
 
@@ -70,21 +85,15 @@ export async function POST(req: NextRequest) {
       detectedType = "PDF";
       let parser: PDFParse | null = null;
       try {
-        console.info("[parse-file]", {
-          stage: "before-pdf-constructor",
-          dataType: data.constructor.name,
-          byteLength: data.byteLength,
-        });
+        logParseStage("PDF_RECEIVED", file, { byteLength: data.byteLength });
         parser = new PDFParse({ data });
-        logParseStage("after-pdf-constructor", file);
-        logParseStage("before-pdf-getText", file);
+        logParseStage("PARSER_CREATED", file);
+        logParseStage("GET_TEXT_START", file);
         const res = await parser.getText();
-        logParseStage("after-pdf-getText", file);
+        logParseStage("GET_TEXT_SUCCESS", file);
         extractedText = typeof res === "string" ? res : res?.text || "";
       } catch (pdfErr: any) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[parse-file] PDF parsing failed", pdfErr);
-        }
+        logParseError("GET_TEXT_FAILED", pdfErr);
         return NextResponse.json(
           {
             success: false,
@@ -96,11 +105,11 @@ export async function POST(req: NextRequest) {
       } finally {
         if (parser) {
           try {
-            logParseStage("before-pdf-destroy", file);
+            logParseStage("PARSER_DESTROY_START", file);
             await parser.destroy();
-            logParseStage("after-pdf-destroy", file);
-          } catch {
-            // Ignore destruction errors
+            logParseStage("PARSER_DESTROYED", file);
+          } catch (destroyErr) {
+            logParseError("PARSER_DESTROY_FAILED", destroyErr);
           }
         }
       }
@@ -183,13 +192,11 @@ export async function POST(req: NextRequest) {
       wordCount: normalizedText.split(/\s+/).filter(Boolean).length,
     });
   } catch (err: any) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[parse-file] route-response-500", err);
-    }
+    logParseError("ROUTE_FAILED", err);
     return NextResponse.json(
       {
         success: false,
-        error: err.message || "An unexpected error occurred while processing the document.",
+        error: "Unable to process this document on the server. Please try again or paste the text directly.",
       },
       { status: 500 }
     );
