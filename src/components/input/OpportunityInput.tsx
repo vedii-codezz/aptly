@@ -38,7 +38,8 @@ export function OpportunityInput() {
     activeProfile,
   } = useWorkspaceStore();
 
-  const [inputMode, setInputMode] = useState<"demo" | "paste" | "upload">("demo");
+  const [inputMode, setInputMode] = useState<"demo" | "link" | "paste" | "upload">("demo");
+  const [opportunityUrl, setOpportunityUrl] = useState("");
   const [customText, setCustomText] = useState("");
   const [selectedType, setSelectedType] = useState<OpportunityType>(activeOpportunity.type);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -98,6 +99,21 @@ export function OpportunityInput() {
     }
   };
 
+  const handleImportUrl = async () => {
+    if (!opportunityUrl.trim() || isExtracting) return;
+    setIsExtracting(true); setExtractionError(null); setExtractingStage("01 VALIDATE");
+    try {
+      setExtractingStage("02 FETCH");
+      const imported = await fetch("/api/opportunity/import-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: opportunityUrl }) });
+      const result = await imported.json();
+      if (!result.success) throw new Error(result.error || "IMPORT_FAILED");
+      setExtractingStage("03 EXTRACT"); setCustomText(result.data.text);
+      setExtractingStage("04 STRUCTURE");
+      await handleExtractWithAI(result.data.text);
+    } catch (error: any) { setExtractionError(error.message === "PAGE_NOT_PUBLIC" ? "This listing is not publicly readable. Paste the description to continue." : "APTLY couldn't import this public page. Paste the opportunity description instead."); }
+    finally { setIsExtracting(false); setExtractingStage(""); }
+  };
+
   const isLoaded = activeOpportunity.requirements.length > 0;
 
   return (
@@ -122,6 +138,10 @@ export function OpportunityInput() {
 
         {/* Mode Selector */}
         <div className="inline-flex rounded-control border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-0.5">
+          <button
+            onClick={() => setInputMode("link")}
+            className={cn("px-2.5 py-1 text-system-xs rounded-control transition-colors duration-micro", inputMode === "link" ? "bg-black text-white" : "text-[var(--color-text-muted)] hover:text-black")}
+          >LINK</button>
           <button
             onClick={() => setInputMode("demo")}
             className={cn(
@@ -221,6 +241,15 @@ export function OpportunityInput() {
               {isCriteriaReviewOpen ? "Hide Criteria ↑" : "Review Requirements →"}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Paste Opportunity Text */}
+      {inputMode === "link" && (
+        <div className="space-y-3">
+          <label className="block text-[10px] font-mono font-bold text-[var(--color-text-muted)] tracking-wider">OPPORTUNITY URL</label>
+          <div className="flex gap-2"><input value={opportunityUrl} onChange={(e) => setOpportunityUrl(e.target.value)} placeholder="https://company.com/careers/..." type="url" className="min-w-0 flex-1 text-xs font-mono p-3 border border-[var(--color-border)] rounded-control focus:outline-none focus:border-[var(--color-accent)]" /><button onClick={handleImportUrl} disabled={!opportunityUrl.trim() || isExtracting} className="px-3.5 bg-black disabled:opacity-40 text-white rounded-control text-[10px] font-mono font-bold">IMPORT OPPORTUNITY</button></div>
+          <p className="text-[10px] text-[var(--color-text-muted)] font-sans">APTLY reads publicly accessible pages only. You can review extracted requirements before analysis.</p>
         </div>
       )}
 
