@@ -63,9 +63,13 @@ export function RequirementsSection({ requirements, onTraceWhy }: RequirementsSe
                     key={req.id}
                     onMouseEnter={() => setHoveredId(req.id)}
                     onMouseLeave={() => setHoveredId(null)}
+                    onFocus={() => setHoveredId(req.id)}
+                    onBlur={() => setHoveredId(null)}
+                    tabIndex={0}
                     className={cn(
-                      "py-5 space-y-3 transition-opacity duration-micro",
-                      isDimmed ? "md:opacity-55" : "opacity-100"
+                      "py-5 space-y-3 transition-opacity duration-micro border-l-2 border-transparent focus-visible:outline-none focus-visible:border-[var(--color-accent)] focus-visible:pl-2",
+                      isDimmed ? "md:opacity-55" : "opacity-100",
+                      hoveredId === req.id && "border-[var(--color-accent)] pl-2"
                     )}
                   >
                     {/* Main Row */}

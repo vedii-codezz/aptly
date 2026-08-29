@@ -22,6 +22,7 @@ interface ImproveSectionProps {
 export function ImproveSection({ plans, onSimulateEvidence, activePlanId, onActivePlanChange }: ImproveSectionProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string>(plans[0]?.id || "");
   const [hasEntered, setHasEntered] = useState(false);
+  const [activeStep, setActiveStep] = useState<string | null>(null);
   const progressionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -175,7 +176,15 @@ export function ImproveSection({ plans, onSimulateEvidence, activePlanId, onActi
               {selectedPlan.steps.map((step) => (
                 <div
                   key={step.stepNumber}
-                  className="relative z-10 p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between"
+                  tabIndex={0}
+                  onMouseEnter={() => setActiveStep(step.stepNumber)}
+                  onMouseLeave={() => setActiveStep(null)}
+                  onFocus={() => setActiveStep(step.stepNumber)}
+                  onBlur={() => setActiveStep(null)}
+                  className={cn(
+                    "relative z-10 p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between transition-transform duration-micro focus-visible:outline-none",
+                    activeStep === step.stepNumber && "border-[var(--color-accent)] -translate-y-0.5"
+                  )}
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">

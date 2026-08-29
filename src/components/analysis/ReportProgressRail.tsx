@@ -51,6 +51,7 @@ export function ReportProgressRail() {
   };
 
   const activeIndex = RAIL_CHAPTERS.findIndex((c) => c.id === activeId);
+  const progress = Math.max(0, activeIndex) / Math.max(1, RAIL_CHAPTERS.length - 1);
 
   return (
     <aside
@@ -60,6 +61,11 @@ export function ReportProgressRail() {
       {/* Background Track Line */}
       <div className="relative flex flex-col items-center gap-3 py-2">
         <div className="absolute top-3 bottom-3 w-px bg-[var(--color-border)] -z-10" />
+        <div
+          aria-hidden="true"
+          className="absolute top-3 bottom-3 w-px bg-[var(--color-accent)] origin-top transition-transform duration-ui ease-[cubic-bezier(0.22,1,0.36,1)] -z-10 motion-reduce:transition-none"
+          style={{ transform: `scaleY(${progress})` }}
+        />
 
         {RAIL_CHAPTERS.map((ch, idx) => {
           const isActive = ch.id === activeId;
