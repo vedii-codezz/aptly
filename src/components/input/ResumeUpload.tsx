@@ -42,9 +42,8 @@ export function ResumeUpload() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [parseStage, setParseStage] = useState<ParseStage>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadedFileName, setUploadedFileName] = useState<string | null>(
-    activeResume.isDemo ? "Aarav_Sharma_Resume.pdf" : null
-  );
+  // This belongs to the visible upload transaction, not the global/demo resume.
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,10 +62,16 @@ export function ResumeUpload() {
     setParseStage("ready");
   };
 
+  const beginUpload = () => {
+    setUploadError(null);
+    setUploadedFileName(null);
+    setIsReviewOpen(false);
+    setParseStage("reading");
+  };
+
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
-    setUploadError(null);
-    setParseStage("reading");
+    beginUpload();
 
     try {
       // Small tick for UI feedback
@@ -76,6 +81,8 @@ export function ResumeUpload() {
       const result = await parseDocumentFile(file);
 
       if (!result.success || !result.text) {
+        // Invariant: an error transaction never renders a current-upload success.
+        setUploadedFileName(null);
         setParseStage("error");
         setUploadError(
           result.error ||
@@ -106,7 +113,8 @@ export function ResumeUpload() {
     }
   };
 
-  const isLoaded = activeResume.sections.length > 0 && pastedResumeText.trim().length > 0;
+  // Do not let preloaded demo/Zustand resume data masquerade as this upload.
+  const isLoaded = parseStage === "ready" && uploadError === null;
 
   const stageLabels: Record<ParseStage, string> = {
     idle: "READY",

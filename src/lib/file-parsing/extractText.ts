@@ -77,16 +77,29 @@ export async function parseDocumentFile(file: File): Promise<ParsedDocumentResul
 
     clearTimeout(timeoutId);
 
-    const json = await res.json().catch(() => null);
+    const contentType = res.headers.get("content-type") || "";
+    const payload = contentType.includes("application/json")
+      ? await res.json().catch(() => null)
+      : await res.text().catch(() => "");
 
-    if (!json) {
+    if (!res.ok) {
+      if (payload && typeof payload === "object" && "error" in payload) {
+        return payload as ParsedDocumentResult;
+      }
       return {
         success: false,
-        error: `Server responded with status ${res.status}. Please paste your text directly.`,
+        error: "PDF parsing failed on the server.",
       };
     }
 
-    return json;
+    if (!payload || typeof payload !== "object") {
+      return {
+        success: false,
+        error: "PDF parsing failed on the server.",
+      };
+    }
+
+    return payload as ParsedDocumentResult;
   } catch (err: any) {
     clearTimeout(timeoutId);
     if (err.name === "AbortError") {

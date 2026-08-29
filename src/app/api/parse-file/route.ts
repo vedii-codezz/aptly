@@ -2,8 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 
+// pdf-parse/pdfjs-dist require Node APIs and must never be deployed as Edge code.
+export const runtime = "nodejs";
+
+function logParseStage(stage: string, file?: File) {
+  if (process.env.NODE_ENV === "production") return;
+  console.info("[parse-file]", {
+    stage,
+    ...(file
+      ? { fileName: file.name, mimeType: file.type || "unknown", fileSize: file.size }
+      : {}),
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
+    logParseStage("route-entered");
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -35,8 +49,11 @@ export async function POST(req: NextRequest) {
     const fileExt = lastDotIndex !== -1 ? fileName.toLowerCase().slice(lastDotIndex) : "";
     const mimeType = (file.type || "").toLowerCase();
 
+    logParseStage("file-received", file);
+
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const data = new Uint8Array(arrayBuffer);
+    const buffer = Buffer.from(data);
 
     let extractedText = "";
     let detectedType = "TXT";
@@ -53,10 +70,21 @@ export async function POST(req: NextRequest) {
       detectedType = "PDF";
       let parser: PDFParse | null = null;
       try {
-        parser = new PDFParse({ data: buffer });
+        console.info("[parse-file]", {
+          stage: "before-pdf-constructor",
+          dataType: data.constructor.name,
+          byteLength: data.byteLength,
+        });
+        parser = new PDFParse({ data });
+        logParseStage("after-pdf-constructor", file);
+        logParseStage("before-pdf-getText", file);
         const res = await parser.getText();
+        logParseStage("after-pdf-getText", file);
         extractedText = typeof res === "string" ? res : res?.text || "";
       } catch (pdfErr: any) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[parse-file] PDF parsing failed", pdfErr);
+        }
         return NextResponse.json(
           {
             success: false,
@@ -68,7 +96,9 @@ export async function POST(req: NextRequest) {
       } finally {
         if (parser) {
           try {
+            logParseStage("before-pdf-destroy", file);
             await parser.destroy();
+            logParseStage("after-pdf-destroy", file);
           } catch {
             // Ignore destruction errors
           }
@@ -143,6 +173,7 @@ export async function POST(req: NextRequest) {
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
+    logParseStage("route-response-200", file);
     return NextResponse.json({
       success: true,
       text: normalizedText,
@@ -152,6 +183,9 @@ export async function POST(req: NextRequest) {
       wordCount: normalizedText.split(/\s+/).filter(Boolean).length,
     });
   } catch (err: any) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[parse-file] route-response-500", err);
+    }
     return NextResponse.json(
       {
         success: false,
