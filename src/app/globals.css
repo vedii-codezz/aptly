@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ─── Color Tokens ─── */
+    --color-bg: #FBFBF9;
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #FFFFFF;
+    --color-surface-muted: #F5F5F0;
+    --color-surface-active: #EFEFEA;
+
+    --color-text-primary: #111111;
+    --color-text-secondary: #4A4A45;
+    --color-text-muted: #8E8E86;
+    --color-text-ghost: #B5B5AB;
+
+    --color-border: #E2E2D8;
+    --color-border-strong: #BCBCB0;
+    --color-border-subtle: #EAEAE2;
+
+    /* ─── Spacing & Layout ─── */
+    --window-radius: 6px;
+    --control-radius: 4px;
+    --titlebar-height: 36px;
+    --topbar-height: 36px;
+
+    /* ─── Motion ─── */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-micro: 150ms;
+    --duration-ui: 250ms;
+    --duration-transition: 800ms;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Consistent selection */
+  ::selection {
+    background-color: #111111;
+    color: #FFFFFF;
+  }
+}
+
+/* ─── Typography Utilities ─── */
+@layer utilities {
+  .type-display {
+    font-family: var(--font-newsreader), Georgia, serif;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    font-weight: 600;
+  }
+
+  .type-system {
+    font-family: var(--font-inter), sans-serif;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .type-body {
+    font-family: var(--font-inter), sans-serif;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+  }
+
+  .type-data {
+    font-family: var(--font-inter), sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ─── Scrollbars ─── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

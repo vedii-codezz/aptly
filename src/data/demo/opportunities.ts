@@ -1,0 +1,373 @@
+import { Opportunity } from "@/types/opportunity";
+
+export const sampleOpportunities: Opportunity[] = [
+  {
+    id: "opp-swe-internship-sample",
+    title: "SAMPLE / Software Engineering Student Internship",
+    organization: "Apex Systems Labs (Demo Listing)",
+    type: "INTERNSHIP",
+    deadline: "2026-09-15",
+    deadlineRelative: "18 days remaining",
+    location: "Bengaluru, India (Hybrid)",
+    stipendOrAward: "₹65,000 / month + Mentorship",
+    description: `Apex Systems Labs is seeking passionate undergraduate engineering students to join our Summer Engineering Cohort. As a Software Engineering Intern, you will collaborate with senior staff engineers to build high-throughput distributed services and intuitive developer interfaces.
+
+Eligibility & Requirements:
+• Must be currently enrolled in an accredited Bachelor's program in Computer Science, AI/ML, Electrical Engineering, or a related technical discipline.
+• Expected graduation window: Between Spring 2027 and Summer 2029 (Second and third-year students preferred).
+• Demonstrable coding proficiency in at least one core language: Python, C++, or Java.
+• Strong foundation in Data Structures, Algorithms, and Object-Oriented Software Design.
+• Familiarity with modern frontend or full-stack web technologies (React, Next.js, or TypeScript) is highly valued.
+• Basic working understanding of Relational Databases and SQL is preferred.
+• Minimum cumulative CGPA of 8.0 / 10.0 (or equivalent percentage) maintained throughout academic study.
+• Must be available to work on-site at our Bengaluru innovation center for the 10-week summer term.
+• Active involvement in technical communities, hackathons, or open-source projects is considered a strong bonus.`,
+    isSample: true,
+    tags: ["Software Engineering", "Undergraduate", "Internship", "Bengaluru", "Python", "React"],
+    requirements: [
+      {
+        id: "req-1",
+        category: "GRADUATION",
+        importance: "MANDATORY",
+        title: "Graduation Window (2027 – 2029)",
+        sourceText: "Expected graduation window: Between Spring 2027 and Summer 2029 (Second and third-year students preferred).",
+        normalizedValue: {
+          minGradYear: 2027,
+          maxGradYear: 2029,
+          raw: "2027-2029",
+        },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ev-match-grad",
+            source: "education",
+            title: "B.Tech CSE Graduation",
+            description: "Graduation year is 2029 (2nd year B.Tech, 4-year degree). Fits exactly within the [2027, 2029] window.",
+          },
+        ],
+        profileEvidenceText: "Graduation Year: 2029 (B.Tech 2nd Year)",
+        reasoning: "Candidate's graduation year 2029 falls within the required range [2027, 2029].",
+        trust: "FACT",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 2",
+        isDeterministic: true,
+      },
+      {
+        id: "req-2",
+        category: "EDUCATION",
+        importance: "MANDATORY",
+        title: "Undergraduate Degree in CS or Technical Field",
+        sourceText: "Must be currently enrolled in an accredited Bachelor's program in Computer Science, AI/ML, Electrical Engineering, or a related technical discipline.",
+        normalizedValue: {
+          degreeLevels: ["Bachelor", "B.Tech", "B.E", "B.S"],
+          fieldsOfStudy: ["Computer Science", "AI/ML", "Electrical Engineering"],
+          raw: "B.Tech/B.E in CS / AI/ML",
+        },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ev-match-edu",
+            source: "education",
+            title: "National Institute of Technology",
+            description: "Enrolled in B.Tech Computer Science & Engineering (Specialization in AI & Machine Learning).",
+          },
+        ],
+        profileEvidenceText: "B.Tech Computer Science & Engineering (AI/ML) at NIT",
+        reasoning: "Candidate is currently enrolled in a qualifying B.Tech Computer Science (AI/ML) degree.",
+        trust: "FACT",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 1",
+        isDeterministic: true,
+      },
+      {
+        id: "req-3",
+        category: "SKILL",
+        importance: "MANDATORY",
+        title: "Proficiency in Python or C++",
+        sourceText: "Demonstrable coding proficiency in at least one core language: Python, C++, or Java.",
+        normalizedValue: {
+          requiredSkills: ["Python", "C++", "Java"],
+          raw: "Python OR C++ OR Java",
+        },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ev-match-py",
+            source: "project",
+            title: "Neural OCR Engine & AutoGrad",
+            description: "Built 2 core Python projects (PyTorch OCR and custom backprop engine) + DSA coursework labs.",
+          },
+          {
+            id: "ev-match-cpp",
+            source: "education",
+            title: "C++ Data Structures & LeetCode",
+            description: "300+ competitive programming algorithmic problems solved in modern C++.",
+          },
+        ],
+        profileEvidenceText: "Python (Strong project evidence) + C++ (300+ problems solved)",
+        reasoning: "Demonstrates strong evidence in both Python and C++, exceeding the single-language requirement.",
+        trust: "FACT",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 3",
+        isDeterministic: false,
+      },
+      {
+        id: "req-4",
+        category: "SKILL",
+        importance: "PREFERRED",
+        title: "Modern Web Frameworks (React / Next.js / TypeScript)",
+        sourceText: "Familiarity with modern frontend or full-stack web technologies (React, Next.js, or TypeScript) is highly valued.",
+        normalizedValue: {
+          requiredSkills: ["React", "Next.js", "TypeScript", "Vue"],
+          raw: "React OR Next.js OR TypeScript",
+        },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ev-match-react",
+            source: "project",
+            title: "Campus Hub Portal & Collaborative Canvas",
+            description: "Production-ready React application serving 1,200+ users + real-time WebSocket whiteboard.",
+          },
+        ],
+        profileEvidenceText: "React 18 + Tailwind CSS (Campus Hub Portal, 1,200 users)",
+        reasoning: "Candidate demonstrates strong evidence in React via two deployed/hackathon projects.",
+        trust: "FACT",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 5",
+        isDeterministic: false,
+      },
+      {
+        id: "req-5",
+        category: "SKILL",
+        importance: "PREFERRED",
+        title: "Relational Databases & SQL Fundamentals",
+        sourceText: "Basic working understanding of Relational Databases and SQL is preferred.",
+        normalizedValue: {
+          requiredSkills: ["SQL", "PostgreSQL", "MySQL", "Relational Databases"],
+          raw: "SQL / Relational DBs",
+        },
+        status: "FAILED",
+        evidence: [],
+        profileEvidenceText: "No SQL coursework, projects, or certifications detected",
+        reasoning: "No evidence of SQL or relational database usage was found in candidate's projects or resume. Because this is a PREFERRED requirement rather than MANDATORY, it represents a competitiveness gap rather than an eligibility disqualifier.",
+        trust: "INTERPRETATION",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 6",
+        isDeterministic: false,
+      },
+      {
+        id: "req-6",
+        category: "GPA",
+        importance: "MANDATORY",
+        title: "Minimum Cumulative CGPA of 8.0 / 10.0",
+        sourceText: "Minimum cumulative CGPA of 8.0 / 10.0 (or equivalent percentage) maintained throughout academic study.",
+        normalizedValue: {
+          minGpa: 8.0,
+          gpaScale: 10.0,
+          raw: "CGPA >= 8.0/10.0",
+        },
+        status: "UNKNOWN",
+        evidence: [],
+        profileEvidenceText: "GPA not provided in profile",
+        reasoning: "The opportunity mandates a CGPA ≥ 8.0, but the candidate's profile did not declare a GPA. Per APTLY principles, missing information remains strictly UNKNOWN and is not treated as a failure. The candidate must verify their CGPA before applying.",
+        trust: "UNKNOWN",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 7",
+        isDeterministic: true,
+      },
+      {
+        id: "req-7",
+        category: "LOCATION",
+        importance: "MANDATORY",
+        title: "Bengaluru On-site Availability",
+        sourceText: "Must be available to work on-site at our Bengaluru innovation center for the 10-week summer term.",
+        normalizedValue: {
+          locations: ["Bengaluru", "Bangalore", "India"],
+          raw: "Bengaluru on-site",
+        },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ev-match-loc",
+            source: "manual",
+            title: "Candidate Location",
+            description: "Based in Bengaluru, Karnataka, India.",
+          },
+        ],
+        profileEvidenceText: "Location: Bengaluru, India",
+        reasoning: "Candidate's listed location is Bengaluru, matching the required office location.",
+        trust: "FACT",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 8",
+        isDeterministic: true,
+      },
+      {
+        id: "req-8",
+        category: "EXPERIENCE",
+        importance: "BONUS",
+        title: "Hackathon or Collaborative Project Track Record",
+        sourceText: "Active involvement in technical communities, hackathons, or open-source projects is considered a strong bonus.",
+        normalizedValue: {
+          raw: "Hackathons / Open Source",
+        },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ev-match-hack",
+            source: "project",
+            title: "Hackathon Awards & Open Source",
+            description: "Finalist at HackInnovate 2025 + Winner at CodeSprint 2024 + NIT Developer Society Lead.",
+          },
+        ],
+        profileEvidenceText: "Finalist HackInnovate 2025, Winner CodeSprint 2024",
+        reasoning: "Candidate exhibits exceptional community and hackathon evidence with two competitive awards.",
+        trust: "FACT",
+        sourceLocation: "Section: Eligibility & Requirements, Bullet 9",
+        isDeterministic: false,
+      },
+    ],
+  },
+  {
+    id: "opp-ai-fellowship-sample",
+    title: "SAMPLE / AI Research Undergraduate Fellowship",
+    organization: "Cortex AI Research Institute (Demo Listing)",
+    type: "FELLOWSHIP",
+    deadline: "2026-09-02",
+    deadlineRelative: "5 days remaining",
+    location: "Remote (Global)",
+    stipendOrAward: "$4,000 Research Grant + Cloud Compute",
+    description: `The Cortex AI Undergraduate Research Fellowship supports promising undergraduate researchers working on deep neural network interpretability, sparse computation, or vision-language models.
+
+Eligibility Criteria:
+• Enrolled in an undergraduate degree with expected completion between 2028 and 2030.
+• Demonstrated hands-on experience training models using PyTorch or JAX.
+• Strong mathematical foundation in Linear Algebra, Probability, and Vector Calculus.
+• Prior research manuscript, conference submission, or technical blog post is preferred.
+• Remote participation permitted with synchronous weekly research seminars.`,
+    isSample: true,
+    tags: ["Artificial Intelligence", "Deep Learning", "Research", "PyTorch", "Remote"],
+    requirements: [
+      {
+        id: "ai-req-1",
+        category: "GRADUATION",
+        importance: "MANDATORY",
+        title: "Graduation Window (2028 – 2030)",
+        sourceText: "Enrolled in an undergraduate degree with expected completion between 2028 and 2030.",
+        normalizedValue: { minGradYear: 2028, maxGradYear: 2030 },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ai-ev-1",
+            source: "education",
+            description: "Graduation year 2029 falls squarely within 2028-2030.",
+          },
+        ],
+        profileEvidenceText: "Graduation Year: 2029",
+        reasoning: "Graduation in 2029 satisfies the 2028-2030 fellowship requirement.",
+        trust: "FACT",
+        isDeterministic: true,
+      },
+      {
+        id: "ai-req-2",
+        category: "SKILL",
+        importance: "MANDATORY",
+        title: "Deep Learning with PyTorch or JAX",
+        sourceText: "Demonstrated hands-on experience training models using PyTorch or JAX.",
+        normalizedValue: { requiredSkills: ["PyTorch", "JAX"] },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ai-ev-2",
+            source: "project",
+            title: "Neural OCR Engine & AutoGrad Engine",
+            description: "Trained PyTorch CNN-GRU models with custom autograd backpropagation engine.",
+          },
+        ],
+        profileEvidenceText: "PyTorch (Neural OCR Engine, TorchScript quantization)",
+        reasoning: "Candidate has demonstrated practical PyTorch model training and execution graph implementation.",
+        trust: "FACT",
+        isDeterministic: false,
+      },
+      {
+        id: "ai-req-3",
+        category: "EXPERIENCE",
+        importance: "PREFERRED",
+        title: "Prior Research Publication or Preprint",
+        sourceText: "Prior research manuscript, conference submission, or technical blog post is preferred.",
+        status: "FAILED",
+        evidence: [],
+        profileEvidenceText: "No formal publications or research papers detected",
+        reasoning: "No formal academic papers or preprints detected in profile. While non-mandatory, this will be competitive among applicants with published work.",
+        trust: "INTERPRETATION",
+        isDeterministic: false,
+      },
+      {
+        id: "ai-req-4",
+        category: "LOCATION",
+        importance: "MANDATORY",
+        title: "Remote Availability",
+        sourceText: "Remote participation permitted with synchronous weekly research seminars.",
+        normalizedValue: { isRemote: true },
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "ai-ev-4",
+            source: "manual",
+            description: "Candidate profile confirms remote work availability.",
+          },
+        ],
+        profileEvidenceText: "Remote Ok: True",
+        reasoning: "Opportunity allows remote participation.",
+        trust: "FACT",
+        isDeterministic: true,
+      },
+    ],
+  },
+  {
+    id: "opp-scholarship-sample",
+    title: "SAMPLE / Open Source Merit Scholarship",
+    organization: "Global Open Science Trust (Demo Listing)",
+    type: "SCHOLARSHIP",
+    deadline: "2026-10-01",
+    deadlineRelative: "34 days remaining",
+    location: "Global / Remote",
+    stipendOrAward: "$2,500 Academic Grant",
+    description: `A competitive academic scholarship recognizing undergraduate developers who actively contribute to open-source software and open-access scientific tooling.`,
+    isSample: true,
+    tags: ["Scholarship", "Open Source", "Undergraduate", "Global"],
+    requirements: [
+      {
+        id: "sch-req-1",
+        category: "EDUCATION",
+        importance: "MANDATORY",
+        title: "Enrolled in Undergraduate Degree",
+        sourceText: "Currently enrolled in an accredited undergraduate degree program.",
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "sch-ev-1",
+            source: "education",
+            description: "B.Tech CSE at NIT.",
+          },
+        ],
+        profileEvidenceText: "B.Tech CSE at NIT",
+        reasoning: "Enrolled in undergraduate engineering degree.",
+        trust: "FACT",
+        isDeterministic: true,
+      },
+      {
+        id: "sch-req-2",
+        category: "EXPERIENCE",
+        importance: "MANDATORY",
+        title: "Public Open Source Portfolio",
+        sourceText: "Must provide a public GitHub profile with active contributions to open software repositories.",
+        status: "MATCHED",
+        evidence: [
+          {
+            id: "sch-ev-2",
+            source: "github",
+            description: "GitHub profile with 12 public repositories and open-source project leadership.",
+          },
+        ],
+        profileEvidenceText: "GitHub profile: https://github.com/aarav-demo (12 repos)",
+        reasoning: "Candidate maintains a public GitHub portfolio with active repositories.",
+        trust: "FACT",
+        isDeterministic: false,
+      },
+    ],
+  },
+];
