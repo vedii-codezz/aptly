@@ -68,7 +68,10 @@ export function ATSSection({ ats }: ATSSectionProps) {
             const isClear = term.presentInResume;
 
             return (
-              <div key={idx} className="py-4 grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-6 items-center text-xs font-sans">
+              <div
+                key={idx}
+                className="py-4 px-2 -mx-2 rounded-control hover:bg-[var(--color-surface-muted)] transition-colors duration-micro grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-6 items-center text-xs font-sans"
+              >
                 {/* Left: Term + Importance */}
                 <div className="md:col-span-4 flex items-center gap-3">
                   <span className="font-mono text-[11px] text-[var(--color-text-ghost)] w-5 text-right">

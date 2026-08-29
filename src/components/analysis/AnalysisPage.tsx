@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { AnalysisNavigation } from "./AnalysisNavigation";
+import { ReportProgressRail } from "./ReportProgressRail";
 import { VerdictSection } from "./VerdictSection";
 import { RequirementsSection } from "./RequirementsSection";
 import { WhySection } from "./WhySection";
@@ -13,6 +14,7 @@ import { StrategySection } from "./StrategySection";
 import { ResumeFitSection } from "./ResumeFitSection";
 import { ATSSection } from "./ATSSection";
 import { AskAptlyDrawer } from "../shared/AskAptlyDrawer";
+import { ChapterReveal } from "../motion/ChapterReveal";
 
 interface AnalysisPageProps {
   onNewAnalysis: () => void;
@@ -33,12 +35,15 @@ export function AnalysisPage({ onNewAnalysis }: AnalysisPageProps) {
   if (!currentAnalysis) return null;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-black font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-[var(--color-bg)] text-black font-sans selection:bg-black selection:text-white relative">
       {/* Minimal Sticky Reading Progress & Index Navigator */}
       <AnalysisNavigation
         onNewAnalysis={onNewAnalysis}
         onOpenAskAptly={() => setIsAskAptlyOpen(true)}
       />
+
+      {/* Desktop Vertical Progress Rail */}
+      <ReportProgressRail />
 
       {/* Wide Editorial Analysis Canvas */}
       <main className="max-w-[1280px] mx-auto px-4 md:px-8 lg:px-12 py-12 md:py-20 lg:py-24 space-y-24 md:space-y-32 lg:space-y-36">
@@ -46,42 +51,58 @@ export function AnalysisPage({ onNewAnalysis }: AnalysisPageProps) {
         <VerdictSection analysis={currentAnalysis} />
 
         {/* 02 / REQUIREMENTS */}
-        <RequirementsSection requirements={currentAnalysis.evaluatedRequirements} />
+        <ChapterReveal>
+          <RequirementsSection requirements={currentAnalysis.evaluatedRequirements} />
+        </ChapterReveal>
 
         {/* 03 / WHY */}
-        <WhySection traces={currentAnalysis.requirementTraces} />
+        <ChapterReveal>
+          <WhySection traces={currentAnalysis.requirementTraces} />
+        </ChapterReveal>
 
         {/* 04 / FIT */}
-        <FitSection
-          skillBreakdown={currentAnalysis.skillBreakdown}
-          strengths={currentAnalysis.strengths}
-          weakAreas={currentAnalysis.weakAreas}
-        />
+        <ChapterReveal>
+          <FitSection
+            skillBreakdown={currentAnalysis.skillBreakdown}
+            strengths={currentAnalysis.strengths}
+            weakAreas={currentAnalysis.weakAreas}
+          />
+        </ChapterReveal>
 
         {/* 05 / GAPS */}
-        <GapsSection gaps={currentAnalysis.gaps} />
+        <ChapterReveal>
+          <GapsSection gaps={currentAnalysis.gaps} />
+        </ChapterReveal>
 
         {/* 06 / IMPROVE */}
         {activeImprovementPlans.length > 0 && (
-          <ImproveSection
-            plans={activeImprovementPlans}
-            onSimulateEvidence={simulateAddSkillEvidence}
-          />
+          <ChapterReveal>
+            <ImproveSection
+              plans={activeImprovementPlans}
+              onSimulateEvidence={simulateAddSkillEvidence}
+            />
+          </ChapterReveal>
         )}
 
         {/* 07 / STRATEGY */}
         {activeStrategyPlan && (
-          <StrategySection strategy={activeStrategyPlan} />
+          <ChapterReveal>
+            <StrategySection strategy={activeStrategyPlan} />
+          </ChapterReveal>
         )}
 
         {/* 08 / RESUME FIT */}
         {resumeFitAnalysis && (
-          <ResumeFitSection resumeFit={resumeFitAnalysis} />
+          <ChapterReveal>
+            <ResumeFitSection resumeFit={resumeFitAnalysis} />
+          </ChapterReveal>
         )}
 
         {/* 09 / ATS */}
         {atsAnalysisResult && (
-          <ATSSection ats={atsAnalysisResult} />
+          <ChapterReveal>
+            <ATSSection ats={atsAnalysisResult} />
+          </ChapterReveal>
         )}
       </main>
 

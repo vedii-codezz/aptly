@@ -5,6 +5,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { ResumeUpload } from "./ResumeUpload";
 import { OpportunityInput } from "./OpportunityInput";
 import { ArrowRight, Sparkles, Check, AlertCircle } from "lucide-react";
+import { MagneticButton } from "../motion/MagneticButton";
 import { cn } from "@/lib/utils";
 
 interface AnalysisInputProps {
@@ -64,22 +65,22 @@ export function AnalysisInput({ onStartAnalysis }: AnalysisInputProps) {
         <OpportunityInput />
       </div>
 
-      {/* Prominent Primary CTA */}
+      {/* Prominent Primary CTA with Subtle Magnetic Interaction */}
       <div className="text-center pt-2">
-        <button
+        <MagneticButton
           onClick={onStartAnalysis}
           disabled={!canAnalyze}
           className={cn(
-            "group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-control text-sm font-sans font-bold shadow-subtle transition-all duration-ui select-none",
+            "group inline-flex items-center justify-center gap-3 px-10 py-4 rounded-control text-sm font-sans font-bold shadow-subtle transition-all duration-ui",
             canAnalyze
-              ? "bg-black hover:bg-[#222] text-white cursor-pointer hover:shadow-command active:scale-[0.99]"
+              ? "bg-black hover:bg-[#222] text-white cursor-pointer hover:shadow-command active:scale-[0.985]"
               : "bg-[var(--color-surface-muted)] border border-[var(--color-border)] text-[var(--color-text-ghost)] cursor-not-allowed opacity-60"
           )}
         >
-          <Sparkles className={cn("w-4 h-4", canAnalyze ? "opacity-90" : "opacity-30")} />
+          <Sparkles className={cn("w-4 h-4 transition-transform group-hover:scale-110", canAnalyze ? "opacity-90" : "opacity-30")} />
           <span>ANALYZE MY FIT</span>
-          <ArrowRight className={cn("w-4 h-4 transition-transform group-hover:translate-x-1", canAnalyze ? "text-white" : "text-[var(--color-text-ghost)]")} />
-        </button>
+          <ArrowRight className={cn("w-4 h-4 transition-transform duration-micro group-hover:translate-x-1", canAnalyze ? "text-white" : "text-[var(--color-text-ghost)]")} />
+        </MagneticButton>
 
         {!canAnalyze && (
           <p className="text-[11px] text-[var(--color-text-muted)] font-sans mt-2">

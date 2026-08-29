@@ -2,6 +2,7 @@
 
 import React from "react";
 import { StrategyPlan } from "@/types/improvement";
+import { MaskedReveal } from "../motion/MaskedReveal";
 import { cn } from "@/lib/utils";
 import { Clock, CheckCircle2 } from "lucide-react";
 
@@ -46,7 +47,15 @@ export function StrategySection({
   };
 
   return (
-    <section id="sec-strategy" className="py-12 border-b border-[var(--color-border-subtle)] space-y-12 font-sans">
+    <section id="sec-strategy" className="py-12 border-b border-[var(--color-border-subtle)] space-y-12 font-sans relative overflow-hidden">
+      {/* Editorial Watermark */}
+      <div
+        aria-hidden="true"
+        className="absolute right-0 top-0 text-[10rem] md:text-[14rem] font-serif font-black text-black/[0.02] select-none pointer-events-none -z-10 leading-none -translate-y-10"
+      >
+        APTLY/07
+      </div>
+
       {/* Chapter Header */}
       <div className="space-y-2 max-w-3xl">
         <span className="text-xs font-mono text-[var(--color-text-muted)] tracking-widest uppercase">
@@ -74,20 +83,12 @@ export function StrategySection({
           )}
         </div>
 
-        {/* Monumental Newsreader Decision */}
-        <div className="space-y-0 select-none">
-          {decisionConfig.lines.map((line, i) => (
-            <div
-              key={i}
-              className={cn(
-                "font-serif font-normal tracking-tight leading-[0.95] text-[clamp(3.5rem,8vw,7.5rem)]",
-                i === decisionConfig.lines.length - 1 ? decisionConfig.color : "text-black"
-              )}
-            >
-              {line}
-            </div>
-          ))}
-        </div>
+        {/* Monumental Masked Newsreader Decision */}
+        <MaskedReveal
+          lines={decisionConfig.lines}
+          lastLineColor={decisionConfig.color}
+          staggerMs={130}
+        />
 
         <p className="text-lg text-[var(--color-text-secondary)] font-sans leading-relaxed max-w-3xl">
           {applyDecision.reasoning}

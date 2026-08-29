@@ -160,10 +160,27 @@ export function ResumeUpload() {
           />
 
           {isProcessing ? (
-            <div className="py-4 space-y-2">
-              <span className="inline-block w-2.5 h-2.5 bg-black rounded-full animate-ping" />
-              <div className="text-xs font-mono text-black font-semibold">
-                {processingStage || "Reading document..."}
+            <div className="py-6 space-y-3 relative overflow-hidden">
+              {/* Document Scan Line */}
+              <div className="absolute left-0 right-0 h-[2px] bg-black shadow-[0_0_8px_rgba(0,0,0,0.25)] animate-doc-scan pointer-events-none" />
+
+              <div className="space-y-1.5">
+                <div className="text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                  PARSING DOCUMENT
+                </div>
+                <div className="text-xs font-mono text-black font-bold tracking-wide">
+                  {processingStage || "READING DOCUMENT..."}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 text-[9px] font-mono text-[var(--color-text-ghost)] pt-1">
+                <span>01 READ</span>
+                <span>›</span>
+                <span>02 EXTRACT</span>
+                <span>›</span>
+                <span>03 STRUCTURE</span>
+                <span>›</span>
+                <span>04 EVIDENCE</span>
               </div>
             </div>
           ) : isLoaded ? (

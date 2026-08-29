@@ -26,8 +26,14 @@
     --titlebar-height: 36px;
     --topbar-height: 36px;
 
-    /* ─── Motion ─── */
+    /* ─── Motion Tokens ─── */
+    --ease-out-editorial: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-micro: 150ms;
+    --motion-ui: 250ms;
+    --motion-reveal: 450ms;
+    --motion-major: 750ms;
+
     --duration-micro: 150ms;
     --duration-ui: 250ms;
     --duration-transition: 800ms;
@@ -82,6 +88,73 @@
   }
 }
 
+/* ─── Keyframe Animations ─── */
+@keyframes doc-scan {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes clip-reveal-up {
+  0% {
+    clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0% 100%);
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes draw-horizontal {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes draw-vertical {
+  0% {
+    transform: scaleY(0);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.animate-doc-scan {
+  animation: doc-scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-clip-reveal {
+  animation: clip-reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-draw-x {
+  transform-origin: left;
+  animation: draw-horizontal 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-draw-y {
+  transform-origin: top;
+  animation: draw-vertical 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* ─── Scrollbars ─── */
 ::-webkit-scrollbar {
   width: 5px;
@@ -110,5 +183,6 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+    transform: none !important;
   }
 }

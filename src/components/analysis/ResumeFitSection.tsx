@@ -28,7 +28,15 @@ export function ResumeFitSection({ resumeFit }: ResumeFitSectionProps) {
   };
 
   return (
-    <section id="sec-resume" className="py-12 border-b border-[var(--color-border-subtle)] space-y-12 font-sans">
+    <section id="sec-resume" className="py-12 border-b border-[var(--color-border-subtle)] space-y-12 font-sans relative overflow-hidden">
+      {/* Editorial Watermark */}
+      <div
+        aria-hidden="true"
+        className="absolute right-0 top-0 text-[10rem] md:text-[14rem] font-serif font-black text-black/[0.02] select-none pointer-events-none -z-10 leading-none -translate-y-10"
+      >
+        APTLY/08
+      </div>
+
       {/* Chapter Header */}
       <div className="space-y-2 max-w-3xl">
         <span className="text-xs font-mono text-[var(--color-text-muted)] tracking-widest uppercase">

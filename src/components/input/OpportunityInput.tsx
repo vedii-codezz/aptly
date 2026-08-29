@@ -281,9 +281,28 @@ export function OpportunityInput() {
 
       {/* Extraction Status */}
       {isExtracting && (
-        <div className="p-3 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-control text-xs font-mono text-black flex items-center gap-2">
-          <span className="w-2 h-2 bg-black rounded-full animate-ping" />
-          <span>{extractingStage || "Processing opportunity..."}</span>
+        <div className="p-4 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-control space-y-2 relative overflow-hidden">
+          {/* Document Scan Line */}
+          <div className="absolute left-0 right-0 h-[2px] bg-black shadow-[0_0_8px_rgba(0,0,0,0.25)] animate-doc-scan pointer-events-none" />
+
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+              ANALYZING CRITERIA
+            </div>
+            <div className="text-xs font-mono text-black font-bold tracking-wide">
+              {extractingStage || "READING DOCUMENT..."}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[9px] font-mono text-[var(--color-text-ghost)] pt-1 border-t border-[var(--color-border-subtle)]">
+            <span>01 READ</span>
+            <span>›</span>
+            <span>02 MANDATORY</span>
+            <span>›</span>
+            <span>03 PREFERRED</span>
+            <span>›</span>
+            <span>04 CONSTRAINTS</span>
+          </div>
         </div>
       )}
 

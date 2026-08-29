@@ -13,6 +13,7 @@ interface RequirementsSectionProps {
 
 export function RequirementsSection({ requirements }: RequirementsSectionProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const groups = [
     { title: "MANDATORY ELIGIBILITY", importance: "MANDATORY" as const, items: requirements.filter((r) => r.importance === "MANDATORY") },
@@ -54,9 +55,18 @@ export function RequirementsSection({ requirements }: RequirementsSectionProps) 
             <div className="divide-y divide-[var(--color-border-subtle)]">
               {group.items.map((req, idx) => {
                 const isExpanded = expandedId === req.id;
+                const isDimmed = hoveredId !== null && hoveredId !== req.id;
 
                 return (
-                  <div key={req.id} className="py-5 space-y-3">
+                  <div
+                    key={req.id}
+                    onMouseEnter={() => setHoveredId(req.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    className={cn(
+                      "py-5 space-y-3 transition-opacity duration-micro",
+                      isDimmed ? "md:opacity-55" : "opacity-100"
+                    )}
+                  >
                     {/* Main Row */}
                     <div
                       onClick={() => setExpandedId(isExpanded ? null : req.id)}

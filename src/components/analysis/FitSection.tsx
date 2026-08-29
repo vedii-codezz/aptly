@@ -30,6 +30,8 @@ export function FitSection({
   strengths,
   weakAreas,
 }: FitSectionProps) {
+  const [hoveredSignalIdx, setHoveredSignalIdx] = React.useState<number | null>(null);
+
   const strengthStyles: Record<EvidenceStrength, string> = {
     STRONG: "text-aptly-match bg-aptly-match-bg border-aptly-match-border",
     MODERATE: "text-[var(--color-text-secondary)] bg-[var(--color-surface-muted)] border-[var(--color-border)]",
@@ -67,24 +69,36 @@ export function FitSection({
           </div>
 
           <div className="space-y-6">
-            {strengths.map((s, idx) => (
-              <div key={idx} className="space-y-1.5 pb-5 border-b border-[var(--color-border-subtle)] last:border-b-0">
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-xs font-bold text-[var(--color-text-ghost)]">
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <h4 className="text-base font-bold text-black font-sans">
-                    {s.title}
-                  </h4>
+            {strengths.map((s, idx) => {
+              const isHovered = hoveredSignalIdx === idx;
+
+              return (
+                <div
+                  key={idx}
+                  onMouseEnter={() => setHoveredSignalIdx(idx)}
+                  onMouseLeave={() => setHoveredSignalIdx(null)}
+                  className={cn(
+                    "space-y-1.5 pb-5 border-b border-[var(--color-border-subtle)] last:border-b-0 transition-all duration-micro rounded-control p-2 -mx-2",
+                    isHovered ? "bg-[var(--color-surface-active)]" : "bg-transparent"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={cn("font-mono text-xs font-bold", isHovered ? "text-aptly-match" : "text-[var(--color-text-ghost)]")}>
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                    <h4 className="text-base font-bold text-black font-sans">
+                      {s.title}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)] font-sans leading-relaxed pl-7">
+                    {s.detail}
+                  </p>
+                  <div className="text-[11px] font-mono text-[var(--color-text-muted)] pl-7 pt-1">
+                    Source: <strong className="text-black">{s.evidenceSource}</strong> · {s.evidenceItemsCount} verified items
+                  </div>
                 </div>
-                <p className="text-sm text-[var(--color-text-secondary)] font-sans leading-relaxed pl-7">
-                  {s.detail}
-                </p>
-                <div className="text-[11px] font-mono text-[var(--color-text-muted)] pl-7 pt-1">
-                  Source: <strong className="text-black">{s.evidenceSource}</strong> · {s.evidenceItemsCount} verified items
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

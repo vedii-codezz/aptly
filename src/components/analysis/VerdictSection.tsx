@@ -3,6 +3,7 @@
 import React from "react";
 import { AnalysisResult } from "@/types/analysis";
 import { StatusBadge } from "../shared/StatusBadge";
+import { MaskedReveal } from "../motion/MaskedReveal";
 import { cn } from "@/lib/utils";
 import { ArrowDown } from "lucide-react";
 
@@ -47,20 +48,12 @@ export function VerdictSection({ analysis }: VerdictSectionProps) {
         />
       </div>
 
-      {/* Monumental Newsreader Display Headline */}
-      <div className="space-y-0 select-none">
-        {verdictConfig.lines.map((line, i) => (
-          <div
-            key={i}
-            className={cn(
-              "font-serif font-normal tracking-tight leading-[0.95] text-[clamp(4rem,9vw,9rem)]",
-              i === verdictConfig.lines.length - 1 ? verdictConfig.color : "text-black"
-            )}
-          >
-            {line}
-          </div>
-        ))}
-      </div>
+      {/* Monumental Masked Newsreader Display Headline */}
+      <MaskedReveal
+        lines={verdictConfig.lines}
+        lastLineColor={verdictConfig.color}
+        staggerMs={130}
+      />
 
       {/* Summary Reasoning Text (Constrained Reading Width, 17-18px) */}
       <div className="max-w-3xl space-y-6">

@@ -28,7 +28,15 @@ export function WhySection({ traces }: WhySectionProps) {
   };
 
   return (
-    <section id="sec-why" className="py-12 border-b border-[var(--color-border-subtle)] space-y-10 font-sans">
+    <section id="sec-why" className="py-12 border-b border-[var(--color-border-subtle)] space-y-10 font-sans relative overflow-hidden">
+      {/* Editorial Watermark */}
+      <div
+        aria-hidden="true"
+        className="absolute right-0 top-0 text-[10rem] md:text-[14rem] font-serif font-black text-black/[0.02] select-none pointer-events-none -z-10 leading-none -translate-y-10"
+      >
+        APTLY/03
+      </div>
+
       {/* Chapter Header */}
       <div className="space-y-2 max-w-3xl">
         <span className="text-xs font-mono text-[var(--color-text-muted)] tracking-widest uppercase">
@@ -82,7 +90,7 @@ export function WhySection({ traces }: WhySectionProps) {
         {/* 4 Connected Stages Across Desktop Width */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 relative">
           {/* STAGE 1: SOURCE REQUIREMENT */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between">
+          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
                 <span>01 / SOURCE SPECIFICATION</span>
@@ -104,7 +112,7 @@ export function WhySection({ traces }: WhySectionProps) {
           </div>
 
           {/* STAGE 2: NORMALIZED INTERPRETATION */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between">
+          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
                 <span>02 / NORMALIZED RULE</span>
@@ -124,7 +132,7 @@ export function WhySection({ traces }: WhySectionProps) {
           </div>
 
           {/* STAGE 3: CANDIDATE PROFILE EVIDENCE */}
-          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between">
+          <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-control space-y-3 flex flex-col justify-between shadow-subtle">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-[var(--color-text-muted)] uppercase">
                 <span>03 / CANDIDATE EVIDENCE</span>
@@ -162,8 +170,8 @@ export function WhySection({ traces }: WhySectionProps) {
             </div>
           </div>
 
-          {/* STAGE 4: DETERMINISTIC DECISION */}
-          <div className="p-5 bg-black text-white rounded-control space-y-3 flex flex-col justify-between">
+          {/* STAGE 4: DETERMINISTIC DECISION (Arrival State) */}
+          <div className="p-5 bg-black text-white rounded-control space-y-3 flex flex-col justify-between shadow-command transition-transform duration-ui hover:scale-[1.01]">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-[10px] font-mono font-bold text-stone-400 uppercase">
                 <span>04 / DETERMINISTIC DECISION</span>
@@ -179,8 +187,9 @@ export function WhySection({ traces }: WhySectionProps) {
               </p>
             </div>
 
-            <div className="text-[10px] font-mono text-stone-500 pt-2 border-t border-stone-800">
-              100% Deterministic Rule Engine
+            <div className="text-[10px] font-mono text-stone-500 pt-2 border-t border-stone-800 flex items-center justify-between">
+              <span>100% Deterministic</span>
+              <span className="text-emerald-400">✓ EVALUATED</span>
             </div>
           </div>
         </div>
