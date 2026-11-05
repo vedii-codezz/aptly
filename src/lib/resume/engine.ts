@@ -1,3 +1,6 @@
+import { requirementAction } from '@/lib/eligibility/recommendations';
+import { summarizeMandatoryEligibility } from '@/lib/eligibility/summary';
+import { matchResumeRequirement } from './requirementMatcher';
 import { AnalysisResult } from "@/types/analysis";
 import { StudentProfile } from "@/types/profile";
 import {
@@ -23,43 +26,8 @@ export function evaluateResumeFit(
     const profileEvidence = traceData?.evidenceTrace.evidenceStrength || "NOT_FOUND";
     const profileSummaryText = traceData?.evidenceTrace.matchedSummary || "No profile evidence recorded.";
 
-    // Check where it appears in resume
-    const locations: RequirementResumeTrace["resumeEvidenceLocations"] = [];
-
-    const reqTextLower = (req.title + " " + req.sourceText).toLowerCase();
-
-    // Check skills mentioned in requirement
-    const skillsInReq = ["Python", "C++", "React", "SQL", "TypeScript", "PyTorch", "JavaScript", "Linux", "Git"].filter(
-      (s) => new RegExp(`\\b${s.replace("+", "\\+")}\\b`, "i").test(reqTextLower)
-    );
-
-    resume.sections.forEach((sec) => {
-      if (req.category === "SKILL" || skillsInReq.length > 0) {
-        skillsInReq.forEach((s) => {
-          const escaped = s.replace("+", "\\+");
-          if (new RegExp(`\\b${escaped}\\b`, "i").test(sec.content)) {
-            const matchLine = sec.rawLines.find((l) => new RegExp(`\\b${escaped}\\b`, "i").test(l)) || sec.content.slice(0, 100);
-            if (!locations.some((loc) => loc.snippet === matchLine)) {
-              locations.push({ sectionType: sec.type, snippet: matchLine });
-            }
-          }
-        });
-      }
-
-      if (req.category === "GRADUATION") {
-        if (sec.type === "EDUCATION" && /2029/i.test(sec.content)) {
-          locations.push({ sectionType: sec.type, snippet: "Expected Graduation: May 2029" });
-        }
-      } else if (req.category === "GPA") {
-        if (sec.type === "EDUCATION" && /\b(cgpa|gpa|8\.\d|9\.\d)\b/i.test(sec.content)) {
-          locations.push({ sectionType: sec.type, snippet: sec.content });
-        }
-      } else if (req.importance === "BONUS") {
-        if (sec.type === "ACHIEVEMENTS" && /hackathon|codesprint|winner|finalist/i.test(sec.content)) {
-          locations.push({ sectionType: sec.type, snippet: sec.rawLines[0] || sec.content });
-        }
-      }
-    });
+    const documentMatch = matchResumeRequirement(req, resume);
+    const locations = documentMatch.locations;
 
     const isPresentInSkills = locations.some((l) => l.sectionType === "SKILLS");
     const isPresentInProjectsOrExp = locations.some(
@@ -75,14 +43,16 @@ export function evaluateResumeFit(
       resumeState = "PARTIALLY_COMMUNICATED"; // Listed in skills only, no project proof in resume
     }
 
-    const isProfileStrong = profileEvidence === "STRONG" || profileEvidence === "MODERATE";
+    if (locations.length && resumeState === "NOT_COMMUNICATED") resumeState = "PARTIALLY_COMMUNICATED";
+    if (req.category === "EDUCATION" && documentMatch.qualification === "INSUFFICIENT") resumeState = "PARTIALLY_COMMUNICATED";
+    const isProfileStrong = req.status === "MATCHED" && (profileEvidence === "STRONG" || profileEvidence === "MODERATE");
     const isProfileResumeDisconnect = isProfileStrong && (resumeState === "NOT_COMMUNICATED" || resumeState === "PARTIALLY_COMMUNICATED");
 
     let communicationVerdict = "No resume evidence found.";
     if (resumeState === "CLEARLY_COMMUNICATED") {
-      communicationVerdict = "Clearly demonstrated across resume sections with project context.";
+      communicationVerdict = "Mentioned in the resume; document presence does not establish eligibility.";
     } else if (resumeState === "PARTIALLY_COMMUNICATED") {
-      communicationVerdict = "Claimed in skills list, but lacking verifiable implementation detail in project bullets.";
+      communicationVerdict = "Mentioned in the document, but supporting context is limited; qualification still requires verification.";
     }
 
     if (isProfileResumeDisconnect) {
@@ -91,14 +61,15 @@ export function evaluateResumeFit(
         requirementTitle: req.title,
         profileStrength: profileEvidence,
         resumeStatus: resumeState,
-        whyItMatters: `You have demonstrable ${profileEvidence} evidence in your candidate profile, but your resume ${
-          resumeState === "PARTIALLY_COMMUNICATED" ? "only lists it in a skill list without project context" : "omits it completely"
+        whyItMatters: `Your profile records ${profileEvidence} evidence, but your resume ${
+          resumeState === "PARTIALLY_COMMUNICATED" ? "mentions it without sufficient requirement-specific context" : "omits it completely"
         }.`,
-        howToFix: `Add a dedicated project bullet or rewrite an existing bullet to highlight your ${req.title} work.`,
+        howToFix: requirementAction(req),
       });
     }
 
     traces.push({
+      documentMatch,
       requirementId: req.id,
       requirementTitle: req.title,
       importance: req.importance,
@@ -111,8 +82,8 @@ export function evaluateResumeFit(
       disconnectExplanation: isProfileResumeDisconnect
         ? "Verified in profile history, but insufficiently evidenced on resume."
         : undefined,
-      actionRecommendation: isProfileResumeDisconnect
-        ? "Rewrite project bullet to explicitly mention this technology."
+      actionRecommendation: resumeState !== "CLEARLY_COMMUNICATED"
+        ? requirementAction(req)
         : undefined,
     });
   });
@@ -154,7 +125,7 @@ export function evaluateResumeFit(
   let fixDecisionState: FixDecisionState = "RESUME_READY";
   let fixBadge = "RESUME READY";
   let fixHeadline = "Resume Clearly Communicates Core Profile Fit";
-  let fixReasoning = "Your resume directly reflects your verified technical background and satisfies mandatory opportunity requirements.";
+  let fixReasoning = "Your resume communicates the evaluated mandatory requirements. Presence does not establish eligibility.";
   let targetAction = "Review Application Strategy";
   let targetWindow: ResumeFitAnalysis["fixDecision"]["targetWindow"] = "STRATEGY";
 
@@ -162,16 +133,16 @@ export function evaluateResumeFit(
     fixDecisionState = "FIX_KEY_EVIDENCE_FIRST";
     fixBadge = "FIX KEY EVIDENCE FIRST";
     fixHeadline = "Profile Evidence Exists but Resume Doesn't Show It";
-    fixReasoning = `You have strong candidate evidence in your background for ${disconnects[0]?.requirementTitle}, but your resume does not communicate it clearly. Update the project bullets before submitting.`;
-    targetAction = "Inspect & Fix Resume Bullets";
+    fixReasoning = `You have strong candidate evidence in your background for ${disconnects[0]?.requirementTitle}, but your resume does not communicate it clearly. Review the requirement-specific recommendation before submitting.`;
+    targetAction = "Review Requirement Evidence";
     targetWindow = "RESUME";
-  } else if (analysis.verdict.stats.mandatoryFailed > 0 || analysis.verdict.stats.mandatoryUnknown > 0) {
-    fixDecisionState = "BUILD_REAL_EVIDENCE_FIRST";
-    fixBadge = "BUILD REAL EVIDENCE FIRST";
-    fixHeadline = "Missing Genuine Evidence for Required Qualifications";
-    fixReasoning = "Do not add keywords to your resume to game ATS screening. Complete actionable project roadmaps in APTLY/IMPROVE first.";
-    targetAction = "Open APTLY/IMPROVE";
-    targetWindow = "IMPROVE";
+  } else if (!summarizeMandatoryEligibility(analysis.evaluatedRequirements).allMatched || mandatoryClearly < mandatoryTotal) {
+    fixDecisionState = "VERIFY_REQUIRED_INFORMATION";
+    fixBadge = "VERIFY REQUIRED INFORMATION";
+    fixHeadline = "Required Qualifications Need Verification";
+    fixReasoning = summarizeMandatoryEligibility(analysis.evaluatedRequirements).message + " Review missing or incomplete document evidence without inventing claims.";
+    targetAction = "Verify Profile Information";
+    targetWindow = "PROFILE";
   }
 
   // 4. Collect inspected bullets

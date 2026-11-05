@@ -33,7 +33,7 @@ export function StrategySection({
     FIX_ONE_THING_FIRST: {
       lines: ["FIX ONE THING", "FIRST."],
       color: "text-aptly-partial",
-      badgeText: "SINGLE BLOCKER",
+      badgeText: "VERIFICATION NEEDED",
     },
     RESOLVE_ELIGIBILITY_FIRST: {
       lines: ["RESOLVE", "ELIGIBILITY FIRST."],

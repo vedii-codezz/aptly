@@ -206,7 +206,7 @@ export function WhySection({ traces, activeRequirementId, onActiveRequirementCha
             </div>
 
             <div className="text-[10px] font-mono text-stone-500 pt-2 border-t border-stone-800 flex items-center justify-between">
-              <span>100% Deterministic</span>
+              <span>{currentTrace.decision.isDeterministic ? 'Deterministic rule' : 'Evidence interpretation — review uncertainty'}</span>
               <span className="text-emerald-400">✓ EVALUATED</span>
             </div>
           </div>

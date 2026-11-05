@@ -9,7 +9,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test": "node scripts/test.cjs",
+    "test:integrity": "node scripts/test.cjs test-report-integrity",
+    "test:phase7": "node scripts/test.cjs test-phase7-scenarios"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

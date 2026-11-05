@@ -13,6 +13,8 @@ export type ATSReadiness =
   | "STRUCTURAL_RISK";
 
 export interface ATSTermAnalysis {
+  requirementId?: string;
+  documentMatch?: import("@/lib/resume/requirementMatcher").ResumeRequirementMatch;
   term: string;
   importance: ATSTermImportance;
   presentInResume: boolean;

@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { summarizeMandatoryEligibility } from "@/lib/eligibility/summary";
+import { OpportunityRequirement } from "@/types/opportunity";
 import { GapCategorization } from "@/types/analysis";
 import { DetailedGapItem } from "@/types/trace";
 import { AlertOctagon, TrendingUp, HelpCircle, CheckCircle2, ArrowRight } from "lucide-react";
@@ -8,11 +10,13 @@ import { cn } from "@/lib/utils";
 
 interface GapsSectionProps {
   gaps: GapCategorization;
+  requirements: OpportunityRequirement[];
   onNavigateToProfile?: (field: string) => void;
   onBuildPlan?: (gapId: string) => void;
 }
 
-export function GapsSection({ gaps, onNavigateToProfile, onBuildPlan }: GapsSectionProps) {
+export function GapsSection({ gaps, requirements, onNavigateToProfile, onBuildPlan }: GapsSectionProps) {
+  const mandatory = summarizeMandatoryEligibility(requirements);
   const priorityBadgeStyles = {
     CRITICAL: "bg-aptly-fail-bg text-aptly-fail border-aptly-fail-border",
     HIGH: "bg-aptly-partial-bg text-aptly-partial border-aptly-partial-border",
@@ -50,9 +54,9 @@ export function GapsSection({ gaps, onNavigateToProfile, onBuildPlan }: GapsSect
           </div>
 
           {gaps.eligibilityGaps.length === 0 ? (
-            <div className="py-4 text-sm text-aptly-match flex items-center gap-2 font-medium">
+            <div className={cn("py-4 text-sm flex items-center gap-2 font-medium", mandatory.allMatched ? "text-aptly-match" : "text-aptly-partial")}>
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>No mandatory eligibility blockers detected. All hard criteria are satisfied.</span>
+              <span>{mandatory.message}</span>
             </div>
           ) : (
             <div className="divide-y divide-[var(--color-border-subtle)]">

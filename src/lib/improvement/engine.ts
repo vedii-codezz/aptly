@@ -1,3 +1,5 @@
+import { requirementAction } from '@/lib/eligibility/recommendations';
+import { summarizeMandatoryEligibility } from '@/lib/eligibility/summary';
 import { AnalysisResult } from "@/types/analysis";
 import { Opportunity } from "@/types/opportunity";
 import { StudentProfile } from "@/types/profile";
@@ -70,7 +72,7 @@ export function buildImprovementPlans(
       priority: "HIGH",
       importance: "MANDATORY",
       actionable: true,
-      whyItMatters: "The opportunity specifies a minimum CGPA of 8.0/10.0. Missing data prevents confirmation of eligibility.",
+      whyItMatters: gpaReq.sourceText,
       sourceRequirementText: gpaReq.sourceText,
       currentState: "CGPA not recorded in profile record.",
       targetState: "Record verified transcript CGPA in profile (e.g. 8.5/10.0).",
@@ -100,7 +102,7 @@ export function buildImprovementPlans(
       ],
       completionCriteria: [
         "CGPA entered in APTLY/PROFILE",
-        "Deterministic check passes with CGPA >= 8.0",
+        "Verify the recorded GPA and scale against the actual requirement",
         "Verdict transitions to YOU CAN APPLY",
       ],
       canSimulateDemoEvidence: false,
@@ -234,6 +236,18 @@ export function buildImprovementPlans(
     });
   });
 
+  for (const req of analysis.evaluatedRequirements.filter(r => r.status === 'UNKNOWN' || r.status === 'PARTIAL')) {
+    if (plans.some(p => p.requirementId === req.id)) continue;
+    plans.push({
+      id: `plan-verify-${req.id}`, gapId: `app-gap-${req.id}`, requirementId: req.id,
+      title: `Verify ${req.title}`, type: 'INFORMATION', priority: req.importance === 'MANDATORY' ? 'HIGH' : 'LOW',
+      importance: req.importance, actionable: true, whyItMatters: req.sourceText,
+      sourceRequirementText: req.sourceText, currentState: req.profileEvidenceText || 'Information incomplete.',
+      targetState: 'Record accurate information and re-evaluate the requirement.',
+      steps: [{ stepNumber: '01', phase: 'VERIFY', title: 'Verify Actual Information', description: requirementAction(req), items: [requirementAction(req)] }],
+      resources: [], completionCriteria: ['Missing information verified against genuine supporting documentation'], canSimulateDemoEvidence: false,
+    });
+  }
   return plans;
 }
 
@@ -246,9 +260,10 @@ export function buildStrategyPlan(
   opportunity: Opportunity,
   profile: StudentProfile
 ): StrategyPlan {
-  const { stats, verdict } = analysis.verdict;
-  const isMandatoryFailed = stats.mandatoryFailed > 0;
-  const isMandatoryUnknown = stats.mandatoryUnknown > 0;
+  const { stats } = analysis.verdict;
+  const mandatory = summarizeMandatoryEligibility(analysis.evaluatedRequirements);
+  const isMandatoryFailed = mandatory.failed > 0;
+  const isMandatoryUnknown = !mandatory.allMatched;
   const hasPreferredGaps = stats.preferredTotal > stats.preferredMatched;
 
   // 1. "Apply Now or Improve First?" Signature Decision
@@ -256,7 +271,7 @@ export function buildStrategyPlan(
   let badgeLabel = "APPLY NOW";
   let headline = "Ready to Apply — Do Not Delay for Preferred Gaps";
   let reasoning =
-    "All mandatory eligibility requirements are verified. Preferred qualifications (such as SQL) enhance competitiveness, but do not block eligibility. If the deadline is near, apply now rather than delaying submission.";
+    mandatory.message + " Preferred qualifications affect competitiveness separately. Review application materials before submission.";
   let urgencyText = "Ready to submit once materials are formatted.";
 
   if (isMandatoryFailed) {
@@ -264,189 +279,57 @@ export function buildStrategyPlan(
     badgeLabel = "RESOLVE ELIGIBILITY FIRST";
     headline = "Hard Eligibility Blockers Present";
     reasoning =
-      "Your profile does not satisfy hard mandatory requirements (e.g. graduation year window). Improving technical skills will not alter this constraint for this specific opportunity.";
-    urgencyText = "Look for alternative opportunities matching your cohort year.";
+      mandatory.message + " Review the failed requirements and their category-specific actions before submitting.";
+    urgencyText = "Review the actual mandatory constraints and whether they can be resolved honestly.";
   } else if (isMandatoryUnknown) {
     applyDecision = "FIX_ONE_THING_FIRST";
     badgeLabel = "FIX ONE THING FIRST";
-    headline = "Add Missing Mandatory GPA Before Submitting";
-    reasoning =
-      "The opportunity specifies a mandatory CGPA threshold (≥ 8.0). Add your GPA in APTLY/PROFILE to confirm complete eligibility.";
+    headline = "Verify Unresolved Mandatory Requirements Before Submitting";
+    reasoning = mandatory.message;
     urgencyText = "Action required in profile before application.";
   }
 
   // 2. Application Readiness
   let readinessState: StrategyPlan["readinessState"] = "READY_TO_APPLY";
-  let readinessSummary = "All verified requirements satisfied.";
+  let readinessSummary = mandatory.message;
 
   if (isMandatoryFailed) {
     readinessState = "BLOCKED";
     readinessSummary = "Hard eligibility constraints not met.";
   } else if (isMandatoryUnknown) {
     readinessState = "NEEDS_INFORMATION";
-    readinessSummary = `${stats.mandatoryUnknown} unrecorded mandatory requirement(s) must be verified.`;
+    readinessSummary = mandatory.message;
   } else if (hasPreferredGaps) {
     readinessState = "READY_WITH_GAPS";
-    readinessSummary = "Mandatory eligibility satisfied 100%; preferred skill gaps exist.";
+    readinessSummary = mandatory.message + " Preferred qualification gaps remain.";
   }
 
-  // 3. Emphasize (Genuine Strongest Evidence)
-  const emphasize = [
-    {
-      id: "emp-1",
-      title: "Hands-on Python Deep Learning & C++ Depth",
-      why: "Proficiency in Python/C++ is explicitly required. Your OCR neural pipeline and 300+ LeetCode algorithmic solutions exceed expectations.",
-      sources: ["Neural OCR Engine (PyTorch)", "AutoGrad Engine", "C++ LeetCode Problem-Solving"],
-      placement: ["Resume top projects section", "Cover letter / statement of technical depth"],
-    },
-    {
-      id: "emp-2",
-      title: "Competitive Hackathon & Community Leadership",
-      why: "The listing considers collaborative building a strong bonus. Your HackInnovate Finalist and CodeSprint Winner awards provide verifiable proof.",
-      sources: ["Finalist — HackInnovate 2025", "Winner — CodeSprint 2024", "NIT Developer Society Lead"],
-      placement: ["Experience section", "Notable achievements subsection"],
-    },
-    {
-      id: "emp-3",
-      title: "Real-World Full-Stack React Experience",
-      why: "Modern web frameworks are highly valued. Campus Hub Portal proves you can ship accessible interfaces to 1,200+ users.",
-      sources: ["Campus Hub Portal (React 18, Tailwind)", "DevPortfolio"],
-      placement: ["Featured web projects", "GitHub portfolio links"],
-    },
-  ];
-
-  // 4. Improve Gaps
-  const improveGaps = [
-    {
-      id: "imp-gap-sql",
-      title: "SQL & Relational Databases",
-      priority: "MEDIUM" as const,
-      why: "Preferred qualification. Missing SQL evidence does not disqualify you.",
-      timingAdvice:
-        opportunity.deadlineRelative?.includes("days")
-          ? "Do NOT delay submitting your application solely to build a new SQL project. Apply now, then practice SQL for technical interviews."
-          : "Work through SQL drills if you have ample time before the deadline.",
-      planId: "plan-skill-0",
-    },
-  ];
-
-  // 5. Positioning Blueprint
+  // Report recommendations come from the evaluated requirements and their actual evidence.
+  const emphasize = analysis.evaluatedRequirements.filter(r => r.status === "MATCHED").map(r => ({
+    id: `emp-${r.id}`, title: r.title, why: r.reasoning || "Matched by the eligibility engine.",
+    sources: r.evidence.map(e => e.title).filter((title): title is string => Boolean(title)), placement: [r.category === "EDUCATION" ? "Education" : "Relevant resume section"],
+  }));
+  const improveGaps = analysis.gaps.competitivenessGaps.map((gap, index) => ({
+    id: gap.id, title: gap.title, priority: gap.priority, why: gap.whyThisMatters,
+    timingAdvice: mandatory.allMatched
+      ? "Do NOT delay submitting solely for preferred gaps. Communicate genuine evidence if available."
+      : "Resolve mandatory eligibility uncertainty or failures before deciding to apply.",
+    planId: `plan-skill-${index}`,
+  }));
   const positioning = {
-    leadWith: [
-      "Technical Projects (Neural OCR Engine & Campus Hub Portal)",
-      "Core Programming Foundation (Python & Modern C++)",
-      "Hackathon Awards & Builder Track Record",
-    ],
-    supportingSection: [
-      "NIT B.Tech Computer Science Coursework (Data Structures, Linear Algebra, Object-Oriented Design)",
-      "Club Mentorship & Workshop Leadership",
-    ],
-    deEmphasize: [
-      "Unrelated high school details or generic soft skill bullet lists",
-      "Claimed tools lacking supporting implementation evidence (e.g. Docker)",
-    ],
+    leadWith: emphasize.map(e => e.title), supportingSection: ["Relevant supporting qualifications"],
+    deEmphasize: ["Unsupported claims and irrelevant details"],
   };
-
-  // 6. Preparation Topics (Derived directly from opportunity requirements)
-  const preparationTopics = [
-    {
-      id: "prep-1",
-      topic: "Core Programming Fundamentals & DSA",
-      urgency: "HIGH" as const,
-      sourceReq: "Proficiency in Python or C++ & Data Structures",
-      focusAreas: [
-        "Time & Space Complexity Analysis (Big-O)",
-        "Trees, Graphs, BFS/DFS traversal, Hash Maps",
-        "Clean, idiomatic object-oriented implementation in C++ / Python",
-      ],
-    },
-    {
-      id: "prep-2",
-      topic: "System Design & Project Deep Dive",
-      urgency: "HIGH" as const,
-      sourceReq: "Hands-on project experience",
-      focusAreas: [
-        "Explain architecture of Neural OCR Engine and inference quantization trade-offs",
-        "Describe client-side caching and state management in Campus Hub Portal",
-      ],
-    },
-    {
-      id: "prep-3",
-      topic: "SQL & Database Basics",
-      urgency: "MEDIUM" as const,
-      sourceReq: "Understanding of Relational Databases (Preferred)",
-      focusAreas: [
-        "Relational schemas, primary/foreign keys, and 3NF normalization",
-        "Writing clean multi-table JOINs and GROUP BY aggregation queries",
-      ],
-    },
-  ];
-
-  // 7. Timeline Schedule (Realistic Countdown Schedule)
-  const timelinePlan = {
-    deadlineText: opportunity.deadlineRelative || "In 18 days",
-    daysRemaining: 18,
-    schedule: [
-      {
-        dayLabel: "TODAY (IMMEDIATE)",
-        tasks: isMandatoryUnknown
-          ? [
-              {
-                id: "t-1",
-                task: "Record official CGPA (≥ 8.0) in APTLY/PROFILE to confirm complete eligibility.",
-                category: "PROFILE" as const,
-                isBlocker: true,
-              },
-              {
-                id: "t-2",
-                task: "Align resume project section to highlight Python and C++ technical depth.",
-                category: "RESUME" as const,
-              },
-            ]
-          : [
-              {
-                id: "t-1",
-                task: "Review resume project bullets for Python & C++ using Action + Work + Tech + Result format.",
-                category: "RESUME" as const,
-              },
-              {
-                id: "t-2",
-                task: "Ensure public GitHub links for Neural OCR Engine and Campus Hub are live.",
-                category: "EVIDENCE" as const,
-              },
-            ],
-      },
-      {
-        dayLabel: "TOMORROW",
-        tasks: [
-          {
-            id: "t-3",
-            task: "Draft tailored application response connecting your hackathon velocity to the company cohort.",
-            category: "APPLICATION" as const,
-          },
-          {
-            id: "t-4",
-            task: "Remove unsupported claimed keywords (e.g. Docker) from resume header to maintain high ATS trust.",
-            category: "RESUME" as const,
-          },
-        ],
-      },
-      {
-        dayLabel: "BEFORE SUBMISSION",
-        tasks: [
-          {
-            id: "t-5",
-            task: "Double-check transcript and official enrollment documents.",
-            category: "PROFILE" as const,
-          },
-          {
-            id: "t-6",
-            task: "Submit application on company portal.",
-            category: "APPLICATION" as const,
-          },
-        ],
-      },
-    ],
+  const preparationTopics = analysis.evaluatedRequirements.filter(r => r.category === "SKILL" || r.category === "EXPERIENCE").map(r => ({
+    id: `prep-${r.id}`, topic: r.title, urgency: r.importance === "MANDATORY" ? "HIGH" as const : "MEDIUM" as const,
+    sourceReq: r.sourceText, focusAreas: [requirementAction(r)],
+  }));
+  const timelinePlan: StrategyPlan["timelinePlan"] = {
+    deadlineText: opportunity.deadlineRelative || opportunity.deadline,
+    schedule: [{ dayLabel: "BEFORE SUBMISSION", tasks: analysis.evaluatedRequirements
+      .filter(r => r.importance === "MANDATORY" && r.status !== "MATCHED")
+      .map(r => ({ id: `verify-${r.id}`, task: requirementAction(r), category: "PROFILE" as const, isBlocker: true }))
+    }],
   };
 
   return {

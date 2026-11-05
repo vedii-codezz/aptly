@@ -82,7 +82,7 @@ export function ResumeFitSection({ resumeFit }: ResumeFitSectionProps) {
         {disconnects.length === 0 ? (
           <div className="py-6 text-sm text-aptly-match flex items-center gap-2 font-medium">
             <CheckCircle2 className="w-5 h-5 text-aptly-match shrink-0" />
-            <span>No profile-resume disconnects detected. All qualifications are clearly communicated.</span>
+            <span>No profile-resume disconnects detected. Review requirement presence and unresolved eligibility separately.</span>
           </div>
         ) : (
           <div className="space-y-4">
@@ -107,7 +107,7 @@ export function ResumeFitSection({ resumeFit }: ResumeFitSectionProps) {
                 </p>
 
                 <div className="p-4 bg-[var(--color-surface-muted)] rounded-control border border-[var(--color-border-subtle)] text-xs text-black font-sans leading-relaxed">
-                  <strong>Recommended Bullet Fix: </strong>{disc.howToFix}
+                  <strong>Recommended Action: </strong>{disc.howToFix}
                 </div>
               </div>
             ))}

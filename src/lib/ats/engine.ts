@@ -1,3 +1,5 @@
+import { requirementAction } from '@/lib/eligibility/recommendations';
+import { matchResumeRequirement } from '@/lib/resume/requirementMatcher';
 import { AnalysisResult } from "@/types/analysis";
 import { StudentProfile } from "@/types/profile";
 import { ResumeDocument } from "@/types/resume";
@@ -28,7 +30,7 @@ export function evaluateATSFit(
       .replace(/Understanding of\s+/i, "")
       .replace(/Experience with\s+/i, "");
 
-    if (req.category === "GRADUATION") termName = "Graduation Cohort (2029)";
+    if (req.category === "GRADUATION") termName = "Expected Graduation Date";
     if (req.category === "GPA") termName = "Academic CGPA";
     if (req.category === "LOCATION") termName = "On-Site Availability";
 
@@ -39,53 +41,28 @@ export function evaluateATSFit(
         ? "HIGHLY_RELEVANT"
         : "SUPPORTING";
 
-    const reqTextLower = (req.title + " " + req.sourceText).toLowerCase();
-    const skillsInReq = ["Python", "C++", "React", "SQL", "TypeScript", "PyTorch", "JavaScript", "Linux", "Git"].filter(
-      (s) => new RegExp(`\\b${s.replace("+", "\\+")}\\b`, "i").test(reqTextLower)
-    );
-
-    let isPresent = false;
-
-    if (req.category === "GRADUATION") {
-      isPresent = resume.education.some((e) => e.graduationYear === 2029) || /2029/i.test(resume.rawText);
-    } else if (req.category === "GPA") {
-      isPresent = /\b(cgpa|gpa|8\.\d|9\.\d)\b/i.test(resume.rawText);
-    } else if (req.category === "EDUCATION") {
-      isPresent = /bachelor|computer science|b\.tech|engineering/i.test(resume.rawText);
-    } else if (req.category === "LOCATION") {
-      isPresent = /bengaluru|bangalore|india|on-site/i.test(resume.rawText);
-    } else if (req.title.toLowerCase().includes("data structures")) {
-      isPresent = /data structures|algorithms|dsa/i.test(resume.rawText);
-    } else if (skillsInReq.length > 0) {
-      isPresent = skillsInReq.some(
-        (s) =>
-          resume.detectedSkills.some((ds) => ds.skill.toLowerCase() === s.toLowerCase()) ||
-          new RegExp(`\\b${s.replace("+", "\\+")}\\b`, "i").test(resume.rawText)
-      );
-    } else {
-      isPresent = new RegExp(`\\b${termName.replace("+", "\\+")}\\b`, "i").test(resume.rawText);
-    }
-
-    const occurrences = isPresent ? 1 : 0;
-    const matchingSections = resume.sections
-      .filter((s) => new RegExp(`\\b${termName.replace("+", "\\+")}\\b`, "i").test(s.content))
-      .map((s) => s.title);
+    const documentMatch = matchResumeRequirement(req, resume);
+    const isPresent = documentMatch.presence === 'PRESENT';
+    const occurrences = documentMatch.locations.length;
+    const matchingSections = Array.from(new Set(documentMatch.locations.map(l => l.sectionType)));
 
     // Anti-Keyword Stuffing Recommendation Guardrail
-    let recommendation = "Term is clearly represented in resume context.";
+    let recommendation = "Term is mentioned in the resume; this does not establish that the qualification is satisfied.";
     let actionTarget: ATSTermAnalysis["actionTarget"] = undefined;
 
     if (!isPresent) {
       if (isProfileStrong) {
-        recommendation = `You have strong candidate evidence for ${termName} in your profile history, but it is omitted from the resume. Add it to your project bullets.`;
+        recommendation = requirementAction(req);
         actionTarget = { window: "RESUME" };
       } else {
-        recommendation = `Do NOT add "${termName}" solely for keyword screening. No verifiable project evidence was detected in your profile. Build genuine evidence first.`;
-        actionTarget = { window: "IMPROVE", planId: "plan-skill-0" };
+        recommendation = `Do NOT add "${termName}" solely for keyword screening. ${requirementAction(req)}`;
+        actionTarget = { window: req.category === "SKILL" && req.status !== "UNKNOWN" ? "IMPROVE" : "PROFILE" };
       }
     }
 
     terms.push({
+      requirementId: req.id,
+      documentMatch,
       term: termName,
       importance,
       presentInResume: isPresent,
@@ -168,7 +145,7 @@ export function evaluateATSFit(
   } else if (preferredMatched < preferredTerms.length) {
     readinessState = "MINOR_GAPS";
     headline = "Good Coverage with Minor Preferred Gaps";
-    summary = `Mandatory qualifications are satisfied; ${preferredTerms.length - preferredMatched} preferred term(s) (e.g. SQL) are omitted.`;
+    summary = `Mandatory terminology is present; eligibility is assessed separately; ${preferredTerms.length - preferredMatched} preferred term(s) (e.g. SQL) are omitted.`;
   }
 
   return {

@@ -95,7 +95,7 @@ export function AnalysisPage({ onNewAnalysis }: AnalysisPageProps) {
 
         {/* 05 / GAPS */}
         <ChapterReveal>
-          <GapsSection gaps={currentAnalysis.gaps} onBuildPlan={openImprovementForGap} />
+          <GapsSection requirements={currentAnalysis.evaluatedRequirements} gaps={currentAnalysis.gaps} onBuildPlan={openImprovementForGap} />
         </ChapterReveal>
 
         {/* 06 / IMPROVE */}

@@ -81,6 +81,7 @@ export type ResumeRequirementState =
   | "NOT_APPLICABLE";
 
 export interface RequirementResumeTrace {
+  documentMatch?: import("@/lib/resume/requirementMatcher").ResumeRequirementMatch;
   requirementId: string;
   requirementTitle: string;
   importance: RequirementImportance;
@@ -114,6 +115,7 @@ export interface ClaimedEvidenceItem {
 
 export type FixDecisionState =
   | "RESUME_READY"
+  | "VERIFY_REQUIRED_INFORMATION"
   | "FIX_KEY_EVIDENCE_FIRST"
   | "BUILD_REAL_EVIDENCE_FIRST";
 

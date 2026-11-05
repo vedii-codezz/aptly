@@ -1,3 +1,5 @@
+import { requirementAction } from './recommendations';
+import { summarizeMandatoryEligibility } from './summary';
 import { StudentProfile } from "@/types/profile";
 import {
   Opportunity,
@@ -827,6 +829,7 @@ export function evaluateEligibility(
       });
     });
 
+  const mandatorySummary = summarizeMandatoryEligibility(evaluatedRequirements);
   if (mandatoryFailed > 0) {
     verdict = "NOT_CURRENTLY_ELIGIBLE";
     badgeLabel = "NOT CURRENTLY ELIGIBLE";
@@ -834,25 +837,24 @@ export function evaluateEligibility(
     eligibilitySummary = `You do not satisfy ${mandatoryFailed} mandatory requirement(s). Review the failed criteria before submitting an application.`;
     competitivenessSummary =
       "Address fundamental eligibility blockers first before optimizing application materials.";
-  } else if (mandatoryUnknown > 0) {
+  } else if (!mandatorySummary.allMatched) {
     verdict = "POSSIBLY_ELIGIBLE";
     badgeLabel = "POSSIBLY ELIGIBLE";
     headline = "Eligible on Known Criteria — Verify Missing Information";
-    eligibilitySummary = `You meet all evaluated mandatory requirements, but ${mandatoryUnknown} mandatory item(s) (such as GPA) are unrecorded in your profile. Once verified, you appear eligible to submit.`;
+    eligibilitySummary = mandatorySummary.message;
     competitivenessSummary =
-      "Your core technical profile aligns well. Ensure your documentation and unverified metrics satisfy the fine print.";
+      "Eligibility and competitiveness are separate. Review the evaluated evidence and verify unresolved mandatory requirements.";
   } else {
     verdict = "CAN_APPLY";
     badgeLabel = "YOU CAN APPLY";
     headline = "All Mandatory Requirements Met";
-    eligibilitySummary =
-      "You satisfy 100% of the verified mandatory eligibility requirements for this opportunity.";
+    eligibilitySummary = mandatorySummary.message;
     competitivenessSummary =
       "Focus on strengthening your application positioning, addressing preferred skill gaps, and polishing your resume bullets.";
   }
 
   summary = `${matched} of ${total} requirements satisfied. ${
-    unknown > 0 ? `${unknown} unconfirmed condition(s) to verify.` : ""
+    (unknown + partial) > 0 ? `${unknown + partial} incomplete or unconfirmed condition(s) to verify.` : ""
   }`;
 
   // Build Skill Breakdown
@@ -925,7 +927,7 @@ export function evaluateEligibility(
       sourceRequirement: r.sourceText,
       currentEvidence: r.profileEvidenceText || "No matching evidence",
       impactType: "Disqualifying condition",
-      nextAction: "Review if your academic cohort or enrollment status can be officially updated.",
+      nextAction: requirementAction(r),
       actionTarget: { window: "CHECK" },
     }));
 
@@ -941,23 +943,23 @@ export function evaluateEligibility(
       sourceRequirement: r.sourceText,
       currentEvidence: r.profileEvidenceText || "None detected",
       impactType: "Does not prevent application; strengthens candidate ranking if closed.",
-      nextAction: "Build focused project evidence only if this opportunity is important enough to justify the effort.",
+      nextAction: requirementAction(r),
       actionTarget: { window: "WHY", tab: "IMPROVE" },
     }));
 
   const applicationGaps: DetailedGapItem[] = evaluatedRequirements
-    .filter((r) => r.status === "UNKNOWN")
+    .filter((r) => r.status === "UNKNOWN" || (r.importance === "MANDATORY" && r.status === "PARTIAL"))
     .map((r) => ({
       id: `app-gap-${r.id}`,
       title: `Unverified ${r.title}`,
       type: "APPLICATION",
       priority: deriveGapPriority("UNKNOWN", r.importance),
       requirementId: r.id,
-      whyThisMatters: "Information required by opportunity is missing from your profile record.",
+      whyThisMatters: "Information required by the opportunity is missing or not fully verified.",
       sourceRequirement: r.sourceText,
-      currentEvidence: "Not declared in profile",
+      currentEvidence: r.profileEvidenceText || "Not declared in profile",
       impactType: r.importance === "MANDATORY" ? "Prevents full eligibility confirmation" : "Informational gap",
-      nextAction: r.category === "GPA" ? "Enter your cumulative GPA in APTLY/PROFILE." : "Provide documentation in profile settings.",
+      nextAction: requirementAction(r),
       actionTarget: { window: "PROFILE", field: r.category.toLowerCase() },
     }));
 
@@ -968,73 +970,31 @@ export function evaluateEligibility(
   };
 
   // Strongest Match & Needs Attention highlights
+  const matchedRequirements = evaluatedRequirements.filter(r => r.status === "MATCHED");
+  const best = matchedRequirements[0];
   const strongestMatch: MatchHighlight = {
-    title: "Programming Foundation (Python & C++)",
-    category: "SKILL",
-    importance: "MANDATORY",
-    evidenceCount: 5,
-    summary: "5 separate pieces of verifiable evidence detected across projects, coursework, and competitive problem-solving.",
-    evidenceDetail: "Neural OCR Engine (PyTorch), AutoGrad Engine (Python), 300+ LeetCode problems (C++).",
+    title: best?.title || "No confirmed match", category: best?.category || "OTHER",
+    importance: best?.importance || "INFORMATIONAL", evidenceCount: best?.evidence.length || 0,
+    summary: best?.profileEvidenceText || "No matched requirement evidence found.", evidenceDetail: best?.reasoning || "Requires verification.",
   };
-
   const firstCompGap = competitivenessGaps[0];
-  const needsAttention: MatchHighlight | null = firstCompGap
-    ? {
-        title: firstCompGap.title,
-        category: "SKILL",
-        importance: "PREFERRED",
-        evidenceCount: 0,
-        summary: "Preferred qualification with no supporting project evidence detected.",
-        evidenceDetail: "Evidence strength: NOT FOUND. Focus on database fundamentals if prioritizing this role.",
-      }
-    : null;
-
-  // Strengths and Weak Areas (Focusing on evidence rather than personality)
-  const strengths = [
-    {
-      title: "Strong Technical Foundation (Python & C++)",
-      detail:
-        "Demonstrated multi-language competence in Python (Deep Learning projects) and C++ (300+ competitive programming algorithmic problems).",
-      evidenceSource: "Neural OCR Engine & NIT Coursework",
-      evidenceItemsCount: 5,
-    },
-    {
-      title: "Proven Hackathon & Collaborative Track Record",
-      detail: "Award-winning builder experience (Finalist HackInnovate 2025, Winner CodeSprint 2024).",
-      evidenceSource: "NIT Developer Society Leadership & Achievements",
-      evidenceItemsCount: 2,
-    },
-    {
-      title: "Full-Stack UI Execution Capability",
-      detail: "Deployed React application with active campus usage (1,200+ users).",
-      evidenceSource: "Campus Hub Portal Project",
-      evidenceItemsCount: 2,
-    },
-  ];
-
-  const weakAreas = [
-    {
-      title: "Limited Relational Database & SQL Evidence",
-      detail:
-        "The opportunity specifically prefers SQL fundamentals, but no database projects or coursework are currently evident in your profile.",
-      evidenceSource: "Profile Skills & Projects",
-      impact: "Competitiveness Gap — Does not prevent eligibility, but reduces standing against candidates with database experience.",
-    },
-    {
-      title: "Academic GPA Unconfirmed",
-      detail:
-        "The listing mandates a CGPA ≥ 8.0. Ensure your official grade record satisfies this before submitting.",
-      evidenceSource: "Education Record (Unknown GPA)",
-      impact: "Application Gap — Verifiable through transcript.",
-    },
-  ];
+  const needsAttention: MatchHighlight | null = firstCompGap ? {
+    title: firstCompGap.title, category: evaluatedRequirements.find(r => r.id === firstCompGap.requirementId)?.category || "OTHER",
+    importance: "PREFERRED", evidenceCount: 0, summary: firstCompGap.currentEvidence || "Evidence needs review.", evidenceDetail: firstCompGap.nextAction,
+  } : null;
+  const strengths = matchedRequirements.map(r => ({ title: r.title, detail: r.profileEvidenceText || "Matched by the eligibility engine.",
+    evidenceSource: r.evidence.map(e => e.title).join(", ") || "Candidate profile", evidenceItemsCount: r.evidence.length }));
+  const weakAreas = evaluatedRequirements.filter(r => r.status !== "MATCHED").map(r => ({
+    title: r.title, detail: r.profileEvidenceText || "Evidence requires verification.", evidenceSource: "Candidate profile",
+    impact: r.importance === "MANDATORY" ? "Mandatory requirement requires resolution or verification." : "Does not determine mandatory eligibility.",
+  }));
 
   // Deterministic Next Best Actions
   const nextBestActions: NextBestAction[] = [];
   let actionIdx = 1;
 
   if (mandatoryUnknown > 0) {
-    const unverifiedItem = missingRequiredInfo[0];
+    const unverifiedItem = missingRequiredInfo.find(item => evaluatedRequirements.some(r => r.id === item.requirementId && r.importance === "MANDATORY"))!;
     nextBestActions.push({
       id: `act-${actionIdx}`,
       stepNumber: `0${actionIdx++}`,
@@ -1065,7 +1025,7 @@ export function evaluateEligibility(
     id: `act-${actionIdx}`,
     stepNumber: `0${actionIdx++}`,
     title: "REVIEW APPLICATION STRATEGY",
-    why: "Your hard eligibility requirements are satisfied. Plan your preparation timeline.",
+    why: mandatorySummary.message,
     priority: "LOW",
     buttonLabel: "PREVIEW STRATEGY (PHASE 4) →",
     targetWindow: "STRATEGY",
@@ -1099,11 +1059,8 @@ export function evaluateEligibility(
     },
     strongestMatch,
     needsAttention,
-    strongestSignal: "Exceptional hands-on Python/C++ project depth and hackathon track record.",
-    weakestSignal:
-      missingRequiredInfo.length > 0
-        ? "Missing GPA confirmation (mandated ≥ 8.0) and lack of demonstrated SQL evidence."
-        : "Lack of demonstrated SQL evidence.",
+    strongestSignal: strongestMatch.summary,
+    weakestSignal: weakAreas[0]?.detail || "No unresolved evaluated requirements.",
     missingRequiredInfo,
   };
 

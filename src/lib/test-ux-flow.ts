@@ -145,6 +145,7 @@ Implemented real-time obstacle avoidance with PyTorch and Python.
   );
 
   console.log(`\nUX & INPUT VALIDATION SUMMARY: ${passed}/${total} TESTS PASSED\n`);
+  if (passed !== total) throw new Error('UX flow regression failed');
   return { passed, total };
 }
 

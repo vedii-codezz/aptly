@@ -30,9 +30,9 @@ function runPhase5Tests() {
   console.assert(pyTraceA?.resumeState === "CLEARLY_COMMUNICATED", "Scenario A Failed: Expected CLEARLY_COMMUNICATED");
   console.log("  ✓ PASS: Profile evidence + resume project usage yields CLEARLY_COMMUNICATED.");
 
-  // SCENARIO B: Profile has strong Python evidence; Resume omits Python completely
+  // SCENARIO B: Profile has strong Python evidence; Resume omits every accepted programming language
   console.log("\n[TEST SCENARIO B] Strong Python in profile + Omitted in resume:");
-  const textWithoutPython = demoResumeRawText.replace(/Python/g, "Rust").replace(/PyTorch/g, "Tch");
+  const textWithoutPython = demoResumeRawText.replace(/Python/g, "Rust").replace(/PyTorch/g, "Tch").replace(/C\+\+/g, "Rust").replace(/\bJava\b/g, "Rust");
   const resumeWithoutPython = parseResumeText(textWithoutPython);
   const fitB = evaluateResumeFit(baseAnalysis, baseProfile, resumeWithoutPython);
   const pyTraceB = fitB.traces.find((t) => t.requirementTitle.toLowerCase().includes("python"));
